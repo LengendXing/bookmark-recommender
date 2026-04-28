@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Bookmark Recommender",
-    version=getattr(__import__("app"), "__version__", "0.1.0"),
+    version="0.1.0",
     lifespan=lifespan,
 )
 
@@ -31,14 +31,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from app.api import auth, bookmarks, recommend
+
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(bookmarks.router, prefix="/api/bookmarks", tags=["bookmarks"])
+app.include_router(recommend.router, prefix="/api/recommend", tags=["recommend"])
+
 
 @app.get("/health")
 async def health():
     return {"status": "ok", "version": "0.1.0"}
-
-
-# Import routers here as Phase progresses
-# from app.api import auth, bookmarks, recommend
-# app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
-# app.include_router(bookmarks.router, prefix="/api/bookmarks", tags=["bookmarks"])
-# app.include_router(recommend.router, prefix="/api/recommend", tags=["recommend"])
