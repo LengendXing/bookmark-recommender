@@ -1,3 +1,6 @@
+import asyncio
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -6,15 +9,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.core.database import init_db
+from app.services.embedding import train_index
 
 settings = get_settings()
 setup_logging(settings.ENVIRONMENT)
+
+scheduler = AsyncIOScheduler()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    scheduler.add_job(train_index, "interval", hours=1, id="train_index", replace_existing=True)
+    scheduler.start()
     yield
+    scheduler.shutdown(wait=False)
 
 
 app = FastAPI(
