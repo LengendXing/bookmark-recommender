@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "bookmarks": "Bookmarks",
+    "audit": "Audit Logs",
+    "model": "Model Status",
+    "logout": "Logout"
+  },
+  "login": {
+    "title": "Login",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Login",
+    "noAccount": "No account? Register"
+  },
+  "dashboard": {
+    "title": "Overview",
+    "bookmarks": "Total Bookmarks",
+    "users": "Users",
+    "logs": "Audit Logs",
+    "model": "Model Version"
+  },
+  "bookmarks": {
+    "title": "Bookmark Manager",
+    "search": "Search bookmarks",
+    "add": "Add Bookmark",
+    "ingest": "Fetch URL",
+    "url": "URL",
+    "edit": "Edit",
+    "delete": "Delete",
+    "recommend": "Recommend",
+    "tags": "Tags"
+  },
+  "audit": {
+    "title": "Audit Logs",
+    "action": "Action",
+    "target": "Target",
+    "time": "Time"
+  },
+  "model": {
+    "title": "Model Status",
+    "train": "Trigger Training",
+    "version": "Version",
+    "status": "Status",
+    "dataset": "Dataset Size"
+  }
+}

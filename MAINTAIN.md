@@ -14,6 +14,30 @@
 
 ---
 
+## v0.1.0 — MVP 发布（2026-04-28）
+
+### 做什么
+- 完成全 8 个 Phase 的开发
+- 后端：FastAPI + SQLAlchemy + Alembic + JWT 认证 + 结构化日志
+- 数据摄入：网页爬取 + Claude API 补全 + 书签入库 + 审计日志
+- 推荐系统：ChromaDB + sentence-transformers 向量搜索 + 模型版本追踪
+- 前端：Vue 3 + Vite + TypeScript + Tailwind CSS + i18n 中/英
+- 三套环境配置 + Docker Compose 一键部署 + README 文档
+- 后端测试 + 前端 Vitest 配置
+
+### 为什么
+- MVP 版本需要覆盖完整流程：摄入 → 补全 → 推荐 → 管理
+- 用户要求轻量部署，选用 SQLite + ChromaDB
+- 推荐需要语义理解，选用 sentence-transformers 向量搜索
+
+### 怎么做
+- 后端 4 个 API 模块：auth / bookmarks / recommend / admin
+- 前端 5 个页面：Login / Dashboard / Bookmarks / Audit / Model
+- 数据库 4 张表：br_users / br_bookmarks / br_audit_logs / br_model_versions
+- Docker Compose 编排后端 + 前端，Nginx 代理 API
+
+---
+
 ## v0.0.0 — 项目初始化（2026-04-28）
 
 ### 做什么

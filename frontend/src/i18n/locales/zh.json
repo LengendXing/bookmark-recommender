@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "dashboard": "控制台",
+    "bookmarks": "书签管理",
+    "audit": "审计日志",
+    "model": "模型状态",
+    "logout": "退出登录"
+  },
+  "login": {
+    "title": "登录",
+    "username": "用户名",
+    "password": "密码",
+    "submit": "登录",
+    "noAccount": "还没有账号？注册"
+  },
+  "dashboard": {
+    "title": "数据概览",
+    "bookmarks": "书签总数",
+    "users": "用户数",
+    "logs": "审计日志",
+    "model": "模型版本"
+  },
+  "bookmarks": {
+    "title": "书签管理",
+    "search": "搜索书签",
+    "add": "添加书签",
+    "ingest": "抓取网页",
+    "url": "网址",
+    "edit": "编辑",
+    "delete": "删除",
+    "recommend": "推荐",
+    "tags": "标签"
+  },
+  "audit": {
+    "title": "审计日志",
+    "action": "操作",
+    "target": "目标",
+    "time": "时间"
+  },
+  "model": {
+    "title": "模型状态",
+    "train": "触发训练",
+    "version": "版本",
+    "status": "状态",
+    "dataset": "数据量"
+  }
+}
