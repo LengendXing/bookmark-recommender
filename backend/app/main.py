@@ -19,7 +19,7 @@ scheduler = AsyncIOScheduler()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
+    init_db()
     scheduler.add_job(train_index, "interval", hours=1, id="train_index", replace_existing=True)
     scheduler.start()
     yield

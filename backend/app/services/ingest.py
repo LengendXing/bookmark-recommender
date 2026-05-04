@@ -2,7 +2,6 @@ import json
 import structlog
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.bookmark import Bookmark
 from app.models.audit_log import AuditLog
@@ -12,16 +11,15 @@ from app.services.claude_service import enrich_bookmark
 logger = structlog.get_logger()
 
 
-async def ingest_single(db: AsyncSession, url: str, user_id: int) -> Bookmark:
-    existing = await db.execute(select(Bookmark).where(Bookmark.url == url))
-    existing = existing.scalar_one_or_none()
+def ingest_single(db, url: str, user_id: int) -> Bookmark:
+    existing = db.execute(select(Bookmark).where(Bookmark.url == url)).scalar_one_or_none()
     if existing:
         return existing
 
-    scraped: ScrapedPage = await scrape_page(url)
+    scraped: ScrapedPage = scrape_page(url)
     logger.info("scraped", url=url, title=scraped.title)
 
-    enriched = await enrich_bookmark(scraped.title, scraped.description, scraped.content_preview)
+    enriched = enrich_bookmark(scraped.title, scraped.description, scraped.content_preview)
 
     tags = enriched.get("tags", [])
     if not isinstance(tags, list):
@@ -47,16 +45,16 @@ async def ingest_single(db: AsyncSession, url: str, user_id: int) -> Bookmark:
         details=json.dumps({"url": url}),
     )
     db.add(log)
-    await db.commit()
-    await db.refresh(bookmark)
+    db.commit()
+    db.refresh(bookmark)
     return bookmark
 
 
-async def ingest_bulk(db: AsyncSession, urls: list[str], user_id: int) -> list[Bookmark]:
+def ingest_bulk(db, urls: list[str], user_id: int) -> list[Bookmark]:
     results = []
     for url in urls:
         try:
-            bm = await ingest_single(db, url, user_id)
+            bm = ingest_single(db, url, user_id)
             results.append(bm)
         except Exception as e:
             logger.error("ingest_failed", url=url, error=str(e))

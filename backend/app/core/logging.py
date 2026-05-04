@@ -4,6 +4,9 @@ import sys
 
 
 def setup_logging(level: str = "INFO"):
+    # Map environment name to log level
+    if level.upper() == "DEVELOPMENT":
+        level = "DEBUG"
     logging.basicConfig(
         format="%(message)s",
         stream=sys.stdout,

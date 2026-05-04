@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -13,9 +12,9 @@ router = APIRouter()
 
 
 @router.post("/register", response_model=Response)
-async def register(body: UserCreate, db: AsyncSession = Depends(get_db)):
-    existing = await db.execute(select(User).where((User.username == body.username) | (User.email == body.email)))
-    if existing.scalar_one_or_none():
+def register(body: UserCreate, db = Depends(get_db)):
+    existing = db.execute(select(User).where((User.username == body.username) | (User.email == body.email))).scalar_one_or_none()
+    if existing:
         raise HTTPException(status_code=400, detail=Response.error(ERROR_BAD_REQUEST, "Username or email already exists").model_dump_json())
 
     user = User(
@@ -24,20 +23,19 @@ async def register(body: UserCreate, db: AsyncSession = Depends(get_db)):
         password_hash=hash_password(body.password),
     )
     db.add(user)
-    await db.commit()
-    await db.refresh(user)
+    db.commit()
+    db.refresh(user)
     return Response.ok(data=UserOut.model_validate(user).model_dump())
 
 
 @router.post("/login", response_model=Response)
-async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.username == body.username))
-    user = result.scalar_one_or_none()
-    if user is None or not verify_password(body.password, user.password_hash):
+def login(body: LoginRequest, db = Depends(get_db)):
+    result = db.execute(select(User).where(User.username == body.username)).scalar_one_or_none()
+    if result is None or not verify_password(body.password, result.password_hash):
         raise HTTPException(status_code=401, detail=Response.error(ERROR_BAD_REQUEST, "Invalid credentials").model_dump_json())
 
-    token = create_access_token({"sub": str(user.id)})
-    return Response.ok(data={"token": token, "user": UserOut.model_validate(user).model_dump()})
+    token = create_access_token({"sub": str(result.id)})
+    return Response.ok(data={"token": token, "user": UserOut.model_validate(result).model_dump()})
 
 
 @router.get("/me", response_model=Response)

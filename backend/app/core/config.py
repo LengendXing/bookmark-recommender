@@ -1,11 +1,22 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings
 
+# Error codes
+ERROR_SUCCESS = 0
+ERROR_TOKEN_EXPIRED = 1001
+ERROR_PERMISSION_DENIED = 1002
+ERROR_INVALID_REQUEST = 1003
+ERROR_NOT_FOUND = 1004
+ERROR_INTERNAL = 2000
+
+
+import os
 
 class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
-    DATABASE_URL: str = "sqlite+aiosqlite:///./data/br_app.db"
-    CHROMA_DB_PATH: str = "./data/chroma_db"
+    BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    DATABASE_URL: str = f"sqlite:///{BASE_DIR}/data/br_app.db?check_same_thread=False&timeout=30"
+    CHROMA_DB_PATH: str = f"{BASE_DIR}/data/chroma_db"
 
     JWT_SECRET_KEY: str = "change-me"
     JWT_ALGORITHM: str = "HS256"

@@ -1,23 +1,51 @@
 <template>
-  <div class="p-6">
-    <h2 class="text-xl font-bold mb-6">{{ t('dashboard.title') }}</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-card rounded-lg border border-border p-5">
-        <p class="text-sm text-muted-foreground">{{ t('dashboard.bookmarks') }}</p>
-        <p class="text-3xl font-bold mt-1">{{ stats.bookmarks || 0 }}</p>
+  <div class="p-6 lg:p-8">
+    <h2 class="text-xl font-semibold tracking-tight mb-8">{{ t('dashboard.title') }}</h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Bookmarks -->
+      <div class="rounded-xl p-5 transition-all duration-200 hover:shadow-md cursor-default" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+            <Bookmark class="w-5 h-5 text-accent" />
+          </div>
+          <p class="text-sm text-muted-foreground font-medium">{{ t('dashboard.bookmarks') }}</p>
+        </div>
+        <p class="text-3xl font-bold tracking-tight">{{ stats.bookmarks || 0 }}</p>
       </div>
-      <div class="bg-card rounded-lg border border-border p-5">
-        <p class="text-sm text-muted-foreground">{{ t('dashboard.users') }}</p>
-        <p class="text-3xl font-bold mt-1">{{ stats.users || 0 }}</p>
+
+      <!-- Users -->
+      <div class="rounded-xl p-5 transition-all duration-200 hover:shadow-md cursor-default" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
+            <Users class="w-5 h-5 text-success" />
+          </div>
+          <p class="text-sm text-muted-foreground font-medium">{{ t('dashboard.users') }}</p>
+        </div>
+        <p class="text-3xl font-bold tracking-tight">{{ stats.users || 0 }}</p>
       </div>
-      <div class="bg-card rounded-lg border border-border p-5">
-        <p class="text-sm text-muted-foreground">{{ t('dashboard.logs') }}</p>
-        <p class="text-3xl font-bold mt-1">{{ stats.audit_logs || 0 }}</p>
+
+      <!-- Audit Logs -->
+      <div class="rounded-xl p-5 transition-all duration-200 hover:shadow-md cursor-default" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+            <ScrollText class="w-5 h-5 text-muted-foreground" />
+          </div>
+          <p class="text-sm text-muted-foreground font-medium">{{ t('dashboard.logs') }}</p>
+        </div>
+        <p class="text-3xl font-bold tracking-tight">{{ stats.audit_logs || 0 }}</p>
       </div>
-      <div class="bg-card rounded-lg border border-border p-5">
-        <p class="text-sm text-muted-foreground">{{ t('dashboard.model') }}</p>
-        <p class="text-lg font-bold mt-1">{{ stats.latest_model?.version || '-' }}</p>
-        <p class="text-xs text-muted-foreground">{{ stats.latest_model?.status }}</p>
+
+      <!-- Model -->
+      <div class="rounded-xl p-5 transition-all duration-200 hover:shadow-md cursor-default" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+            <Cpu class="w-5 h-5 text-accent" />
+          </div>
+          <p class="text-sm text-muted-foreground font-medium">{{ t('dashboard.model') }}</p>
+        </div>
+        <p class="text-lg font-bold tracking-tight">{{ stats.latest_model?.version || '-' }}</p>
+        <p class="text-xs text-muted-foreground mt-0.5">{{ stats.latest_model?.status }}</p>
       </div>
     </div>
   </div>
@@ -27,6 +55,7 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { admin } from '@/api'
+import { Bookmark, Users, ScrollText, Cpu } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const stats = ref<any>({})

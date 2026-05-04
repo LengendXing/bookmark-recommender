@@ -1,6 +1,6 @@
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.core.config import ERROR_TOKEN_EXPIRED, ERROR_PERMISSION_DENIED
 from app.core.database import get_db
@@ -10,9 +10,9 @@ from app.models.user import User
 security = HTTPBearer()
 
 
-async def get_current_user(
+def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: AsyncSession = Depends(get_db),
+    db = Depends(get_db),
 ) -> User:
     payload = decode_access_token(credentials.credentials)
     if payload is None:
@@ -20,15 +20,14 @@ async def get_current_user(
     user_id: str = payload.get("sub")
     if user_id is None:
         raise HTTPException(status_code=401, detail=f"{{'code': {ERROR_PERMISSION_DENIED}, 'message': 'Invalid token'}}")
-    from sqlalchemy import select
-    result = await db.execute(select(User).where(User.id == int(user_id), User.is_active))
+    result = db.execute(select(User).where(User.id == int(user_id), User.is_active))
     user = result.scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=401, detail=f"{{'code': {ERROR_PERMISSION_DENIED}, 'message': 'User not found or inactive'}}")
     return user
 
 
-async def get_admin_user(user: User = Depends(get_current_user)) -> User:
+def get_admin_user(user: User = Depends(get_current_user)) -> User:
     if user.username != "admin":
         raise HTTPException(status_code=403, detail=f"{{'code': {ERROR_PERMISSION_DENIED}, 'message': 'Permission denied'}}")
     return user

@@ -1,4 +1,7 @@
 {
+  "app": {
+    "title": "蠢人书签"
+  },
   "nav": {
     "dashboard": "控制台",
     "bookmarks": "书签管理",

@@ -1,4 +1,7 @@
 {
+  "app": {
+    "title": "Bookmark Recommender"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "bookmarks": "Bookmarks",

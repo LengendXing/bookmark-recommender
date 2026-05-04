@@ -9,7 +9,7 @@ from chromadb.config import Settings as ChromaSettings
 from sentence_transformers import SentenceTransformer
 
 from app.core.config import get_settings
-from app.core.database import async_session
+from app.core.database import Session, get_db
 from app.models.bookmark import Bookmark
 from app.models.model_version import ModelVersion
 from sqlalchemy import select
@@ -43,8 +43,10 @@ def encode_single(text: str) -> list[float]:
     return encode([text])[0]
 
 
-async def train_index():
+def train_index():
     """Full re-index: read all bookmarks from SQLite, encode, upsert to ChromaDB."""
+    from app.core.database import engine
+
     client = get_chroma_client()
     collection_name = "br_bookmarks"
 
@@ -52,9 +54,12 @@ async def train_index():
         client.delete_collection(collection_name)
     collection = client.create_collection(collection_name)
 
-    async with async_session() as db:
-        result = await db.execute(select(Bookmark).where(Bookmark.title != ""))
+    db = Session(bind=engine)
+    try:
+        result = db.execute(select(Bookmark).where(Bookmark.title != ""))
         bookmarks = result.scalars().all()
+    finally:
+        db.close()
 
     if not bookmarks:
         return
@@ -76,7 +81,8 @@ async def train_index():
 
     collection.add(ids=ids, embeddings=embeddings, metadatas=metadatas)
 
-    async with async_session() as db:
+    db = Session(bind=engine)
+    try:
         mv = ModelVersion(
             model_name=_MODEL_NAME,
             version="0.1.0",
@@ -86,10 +92,12 @@ async def train_index():
             training_params=json.dumps({"n_bookmarks": len(bookmarks)}),
         )
         db.add(mv)
-        await db.commit()
+        db.commit()
+    finally:
+        db.close()
 
 
-async def recommend(query: str, limit: int = 10) -> list[dict]:
+def recommend(query: str, limit: int = 10) -> list[dict]:
     client = get_chroma_client()
     collection_name = "br_bookmarks"
 

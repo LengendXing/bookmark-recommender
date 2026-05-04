@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -16,37 +15,37 @@ router = APIRouter()
 
 
 @router.post("", response_model=Response)
-async def recommend(
+def recommend(
     body: RecommendRequest,
-    db: AsyncSession = Depends(get_db),
+    db = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     try:
-        results = await recommend_embeddings(body.query, body.limit)
+        results = recommend_embeddings(body.query, body.limit)
         db.add(AuditLog(user_id=user.id, action="recommend", details=f"query={body.query}"))
-        await db.commit()
+        db.commit()
         return Response.ok(data=[RecommendResult(**r).model_dump() for r in results])
     except Exception as e:
         raise HTTPException(status_code=500, detail=Response.error(ERROR_INTERNAL, str(e)).model_dump_json())
 
 
 @router.post("/train", response_model=Response)
-async def trigger_train(
-    db: AsyncSession = Depends(get_db),
+def trigger_train(
+    db = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     try:
-        await train_index()
+        train_index()
         db.add(AuditLog(user_id=user.id, action="train", target_type="model"))
-        await db.commit()
+        db.commit()
         return Response.ok(data={"status": "trained"})
     except Exception as e:
         raise HTTPException(status_code=500, detail=Response.error(ERROR_INTERNAL, str(e)).model_dump_json())
 
 
 @router.get("/model-status", response_model=Response)
-async def model_status(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
+def model_status(db = Depends(get_db)):
+    result = db.execute(
         select(ModelVersion)
         .order_by(ModelVersion.created_at.desc())
         .limit(5)
