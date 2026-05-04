@@ -14,6 +14,29 @@
 
 ---
 
+## v0.1.1 — UI 重设计（2026-05-04）
+
+### 做什么
+- 整体 UI 重设计：Apple 风格磨砂玻璃侧边栏 + 头部
+- SVG Logo：亮色/暗色两套，严格黑白灰三色，字母 C 居中
+- Lucide 图标：替代 emoji 图标，全界面统一
+- favicon 添加到 index.html
+- i18n 标题「蠢人书签」中英文支持
+- 中/英文切换控件
+- 后端 API 模块改进
+
+### 为什么
+- 用户要求整体视觉升级，黑白灰配色保持克制
+- Logo 简化，放弃汉字改用字母 C
+- 日夜切换需要对应的两套 SVG
+
+### 怎么做
+- 修改 33 个文件，+6925/-244
+- 前端：AdminLayout, AuthLayout, Login, Dashboard, Bookmarks, Audit, Model, main.css, tailwind.config.js
+- 后端：auth, bookmarks, recommend, config, database, security 等模块改进
+
+---
+
 ## v0.1.0 — MVP 发布（2026-04-28）
 
 ### 做什么
