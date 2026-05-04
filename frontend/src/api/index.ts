@@ -14,6 +14,15 @@ export const bookmarks = {
   delete: (id: number) => request.delete(`/bookmarks/${id}`),
   ingest: (url: string) => request.post('/bookmarks/ingest', { url }),
   ingestBulk: (urls: string[]) => request.post('/bookmarks/ingest-bulk', { urls }),
+  importHtml: (browser: string, file: File) => {
+    const formData = new FormData()
+    formData.append('browser', browser)
+    formData.append('file', file)
+    return request.post('/bookmarks/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+  export: () => request.get('/bookmarks/export', { responseType: 'blob' }),
 }
 
 export const recommend = {

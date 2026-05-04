@@ -26,13 +26,26 @@
   "bookmarks": {
     "title": "Bookmark Manager",
     "search": "Search bookmarks",
-    "add": "Add Bookmark",
+    "add": "Add",
+    "import": "Import",
+    "export": "Export",
     "ingest": "Fetch URL",
     "url": "URL",
     "edit": "Edit",
     "delete": "Delete",
     "recommend": "Recommend",
-    "tags": "Tags"
+    "tags": "Tags",
+    "description": "Description",
+    "author": "Author",
+    "category": "Category",
+    "tagsHint": "Comma separated",
+    "browserSource": "Browser Source",
+    "selectBrowser": "Select Browser",
+    "selectFile": "Select File"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save"
   },
   "audit": {
     "title": "Audit Logs",

@@ -14,6 +14,27 @@
 
 ---
 
+## v0.1.2 — 书签管理 CRUD 增强（2026-05-04）
+
+### 做什么
+- 书签管理页面新增三个按钮：新增、导入、导出
+- 新增：弹窗表单填写书签数据（URL、标题、描述、作者、分类、标签）
+- 导入：选择浏览器来源 → 上传 HTML 书签文件 → BeautifulSoup 解析 Netscape Bookmark HTML 格式 → 入库
+- 导出：一键下载当前用户全部书签为 JSON 文件
+- 隐藏 ingest 抓取入口（保留后端 API）
+- 支持浏览器：Chrome / Firefox / Edge / Safari / Opera
+
+### 为什么
+- 用户需要的核心 CRUD 功能不完整，缺少批量导入导出能力
+- 多浏览器书签迁移场景，需要识别浏览器来源
+
+### 怎么做
+- 前端：Bookmarks.vue 内联弹窗组件，i18n 中/英文完整覆盖
+- 后端：POST /bookmarks/import + GET /bookmarks/export 两个新端点
+- 路由顺序修复：/export 和 /import 放在 /{bookmark_id} 之前
+
+---
+
 ## v0.1.1 — UI 重设计（2026-05-04）
 
 ### 做什么

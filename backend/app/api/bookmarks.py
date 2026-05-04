@@ -1,6 +1,9 @@
 import json
+from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from bs4 import BeautifulSoup
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 
 from app.core.database import get_db
@@ -94,6 +97,73 @@ def list_bookmarks(
         data.append(_to_out(bm, tags).model_dump())
 
     return Response.ok(data={"items": data, "total": total, "page": page, "page_size": page_size})
+
+
+@router.get("/export")
+def export_bookmarks(
+    db = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    result = db.execute(select(Bookmark).where(Bookmark.user_id == user.id).order_by(Bookmark.created_at.desc()))
+    bookmarks = result.scalars().all()
+
+    data = []
+    for bm in bookmarks:
+        tags = json.loads(bm.tags) if isinstance(bm.tags, str) else []
+        data.append(_to_out(bm, tags).model_dump(mode='json'))
+
+    json_str = json.dumps(data, ensure_ascii=False, indent=2, default=str)
+
+    return StreamingResponse(
+        iter([json_str]),
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f"attachment; filename=bookmarks-export-{datetime.now().strftime('%Y-%m-%d')}.json"
+        },
+    )
+
+
+@router.post("/import", response_model=Response)
+def import_bookmarks(
+    browser: str = Form(""),
+    file: UploadFile = File(...),
+    db = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    if not file.filename or not file.filename.lower().endswith(('.html', '.htm')):
+        raise HTTPException(status_code=400, detail=Response.error(ERROR_BAD_REQUEST, "Only .html/.htm files are accepted").model_dump_json())
+
+    try:
+        content = file.file.read().decode('utf-8', errors='replace')
+    except Exception:
+        raise HTTPException(status_code=400, detail=Response.error(ERROR_BAD_REQUEST, "Cannot read file").model_dump_json())
+
+    soup = BeautifulSoup(content, 'html.parser')
+    links = soup.find_all('a')
+    imported = 0
+    for link in links:
+        url = link.get('href', '').strip()
+        title = link.get_text(strip=True)
+        if not url or not title:
+            continue
+        existing = db.execute(select(Bookmark).where(Bookmark.url == url, Bookmark.user_id == user.id)).scalar_one_or_none()
+        if existing:
+            continue
+        bm = Bookmark(
+            title=title[:512],
+            url=url[:2048],
+            description="",
+            author="",
+            category=f"imported/{browser}" if browser else "imported",
+            tags=json.dumps([], ensure_ascii=False),
+            user_id=user.id,
+        )
+        db.add(bm)
+        imported += 1
+
+    db.add(AuditLog(user_id=user.id, action="import", target_type="bookmark", target_id=0))
+    db.commit()
+    return Response.ok(data={"count": imported, "browser": browser})
 
 
 @router.get("/{bookmark_id}", response_model=Response)

@@ -16,22 +16,106 @@
           />
         </div>
       </div>
-      <div class="flex-1 min-w-0 max-w-sm">
-        <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.url') }}</label>
-        <input
-          v-model="ingestUrl"
-          :placeholder="t('bookmarks.url')"
-          class="w-full px-3.5 py-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/30"
-          style="background-color: hsl(var(--muted) / 0.6)"
-        />
-      </div>
       <button
-        @click="handleIngest"
+        @click="showAddModal = true"
         class="flex items-center gap-1.5 px-4 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
       >
-        <Download class="w-4 h-4" />
-        {{ t('bookmarks.ingest') }}
+        <Plus class="w-4 h-4" />
+        {{ t('bookmarks.add') }}
       </button>
+      <button
+        @click="showImportModal = true"
+        class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+        style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
+      >
+        <Upload class="w-4 h-4" />
+        {{ t('bookmarks.import') }}
+      </button>
+      <button
+        @click="handleExport"
+        class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+        style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
+      >
+        <FileDown class="w-4 h-4" />
+        {{ t('bookmarks.export') }}
+      </button>
+    </div>
+
+    <!-- Add Bookmark Modal -->
+    <div
+      v-if="showAddModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      @click.self="showAddModal = false"
+    >
+      <div class="rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl" style="background-color: hsl(var(--card))">
+        <h3 class="text-lg font-semibold mb-4">{{ t('bookmarks.add') }}</h3>
+        <form @submit.prevent="handleAdd" class="space-y-4">
+          <div>
+            <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.url') }}</label>
+            <input v-model="addForm.url" type="url" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+          </div>
+          <div>
+            <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.title') }}</label>
+            <input v-model="addForm.title" type="text" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+          </div>
+          <div>
+            <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.description') }}</label>
+            <input v-model="addForm.description" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.author') }}</label>
+              <input v-model="addForm.author" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+            </div>
+            <div>
+              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.category') }}</label>
+              <input v-model="addForm.category" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+            </div>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.tags') }}</label>
+            <input v-model="addForm.tagsStr" :placeholder="t('bookmarks.tagsHint')" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+          </div>
+          <div class="flex gap-3 pt-2">
+            <button type="button" @click="showAddModal = false" class="flex-1 py-2 rounded-xl text-sm font-medium border border-border/50 hover:bg-muted transition-colors">{{ t('common.cancel') }}</button>
+            <button type="submit" :disabled="addLoading" class="flex-1 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ addLoading ? '...' : t('common.save') }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div
+      v-if="showImportModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      @click.self="showImportModal = false"
+    >
+      <div class="rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl" style="background-color: hsl(var(--card))">
+        <h3 class="text-lg font-semibold mb-4">{{ t('bookmarks.import') }}</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.browserSource') }}</label>
+            <select v-model="importBrowser" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)">
+              <option value="">-- {{ t('bookmarks.selectBrowser') }} --</option>
+              <option value="chrome">Google Chrome</option>
+              <option value="firefox">Mozilla Firefox</option>
+              <option value="edge">Microsoft Edge</option>
+              <option value="safari">Apple Safari</option>
+              <option value="opera">Opera</option>
+            </select>
+          </div>
+          <div v-if="importBrowser">
+            <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.selectFile') }}</label>
+            <input ref="fileInput" type="file" accept=".html,.htm" @change="handleFileSelect" class="block w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:text-xs file:font-medium file:border-0 file:bg-accent/10 file:text-accent hover:file:bg-accent/20 transition-all" />
+          </div>
+          <p v-if="importError" class="text-destructive text-xs text-center">{{ importError }}</p>
+          <p v-if="importSuccess" class="text-xs text-center" style="color: hsl(var(--success))">{{ importSuccess }}</p>
+          <div class="flex gap-3 pt-2">
+            <button type="button" @click="showImportModal = false" class="flex-1 py-2 rounded-xl text-sm font-medium border border-border/50 hover:bg-muted transition-colors">{{ t('common.cancel') }}</button>
+            <button @click="handleImport" :disabled="!selectedFile || importLoading" class="flex-1 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ importLoading ? '...' : t('bookmarks.import') }}</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Table -->
@@ -107,7 +191,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { bookmarks } from '@/api'
-import { Search, Download, Trash2, Bookmark } from 'lucide-vue-next'
+import { Search, Plus, Upload, FileDown, Trash2, Bookmark } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const items = ref<any[]>([])
@@ -115,8 +199,21 @@ const total = ref(0)
 const page = ref(1)
 const pageSize = 20
 const searchQuery = ref('')
-const ingestUrl = ref('')
 const error = ref('')
+
+// Add modal
+const showAddModal = ref(false)
+const addLoading = ref(false)
+const addForm = ref({ url: '', title: '', description: '', author: '', category: '', tagsStr: '' })
+
+// Import modal
+const showImportModal = ref(false)
+const importBrowser = ref('')
+const selectedFile = ref<File | null>(null)
+const importLoading = ref(false)
+const importError = ref('')
+const importSuccess = ref('')
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const load = async () => {
   error.value = ''
@@ -129,15 +226,73 @@ const load = async () => {
   }
 }
 
-const handleIngest = async () => {
-  error.value = ''
-  if (!ingestUrl.value) return
+const resetAddForm = () => {
+  addForm.value = { url: '', title: '', description: '', author: '', category: '', tagsStr: '' }
+}
+
+const handleAdd = async () => {
+  addLoading.value = true
   try {
-    await bookmarks.ingest(ingestUrl.value)
-    ingestUrl.value = ''
+    const tags = addForm.value.tagsStr.split(',').map(s => s.trim()).filter(Boolean)
+    await bookmarks.create({
+      url: addForm.value.url,
+      title: addForm.value.title,
+      description: addForm.value.description || undefined,
+      author: addForm.value.author || undefined,
+      category: addForm.value.category || undefined,
+      tags,
+    })
+    showAddModal.value = false
+    resetAddForm()
     load()
   } catch (e: any) {
-    error.value = e.response?.data?.message || 'Ingest failed'
+    error.value = e.response?.data?.message || 'Add failed'
+  } finally {
+    addLoading.value = false
+  }
+}
+
+const handleFileSelect = (e: Event) => {
+  const input = e.target as HTMLInputElement
+  if (input.files && input.files.length > 0) {
+    selectedFile.value = input.files[0]
+    importError.value = ''
+    importSuccess.value = ''
+  }
+}
+
+const handleImport = async () => {
+  if (!selectedFile.value || !importBrowser.value) return
+  importLoading.value = true
+  importError.value = ''
+  importSuccess.value = ''
+  try {
+    const res = await bookmarks.importHtml(importBrowser.value, selectedFile.value)
+    importSuccess.value = `Imported ${res.data?.count || 0} bookmarks`
+    selectedFile.value = null
+    if (fileInput.value) fileInput.value.value = ''
+    load()
+  } catch (e: any) {
+    importError.value = e.response?.data?.message || 'Import failed'
+  } finally {
+    importLoading.value = false
+  }
+}
+
+const handleExport = async () => {
+  try {
+    const res = await bookmarks.export()
+    const blob = res.data instanceof Blob ? res.data : new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `bookmarks-export-${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
+  } catch (e: any) {
+    error.value = e.response?.data?.message || 'Export failed'
   }
 }
 
