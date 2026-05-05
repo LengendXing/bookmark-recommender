@@ -25,6 +25,7 @@ export const bookmarks = {
   },
   export: () => request.get('/bookmarks/export', { responseType: 'blob' }),
   analyzeAll: () => request.post('/bookmarks/analyze-all'),
+  analyzeProgress: () => request.get('/bookmarks/analyze-progress'),
 }
 
 export const collections = {

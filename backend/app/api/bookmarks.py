@@ -1,11 +1,12 @@
 import json
+import threading
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 
-from app.core.database import get_db
+from app.core.database import SessionLocal, get_db
 from app.core.dependencies import get_current_user
 from app.models.audit_log import AuditLog
 from app.models.bookmark import Bookmark
@@ -228,47 +229,96 @@ def move_bookmark(
     return Response.ok(data=_to_out(bm, tags).model_dump())
 
 
+# In-memory progress tracking: {user_id: {total, completed, running, error}}
+_analysis_progress: dict[int, dict] = {}
+_progress_lock = threading.Lock()
+
+
+def _run_analysis(user_id: int):
+    """Background thread: run AI analysis on all bookmarks missing AI-generated fields."""
+    db = SessionLocal()
+    try:
+        result = db.execute(
+            select(Bookmark).where(
+                Bookmark.user_id == user_id,
+                Bookmark.generated_title == "",
+            )
+        )
+        candidates = result.scalars().all()
+
+        with _progress_lock:
+            _analysis_progress[user_id] = {"total": len(candidates), "completed": 0, "running": True, "error": ""}
+
+        for bm in candidates:
+            ai = analyze_bookmark(
+                url=bm.url,
+                bookmark_title=bm.title,
+                page_title=getattr(bm, "page_title", "") or "",
+                page_description=getattr(bm, "page_description", "") or "",
+                page_text=getattr(bm, "page_text", "") or "",
+            )
+
+            bm.generated_title = ai.get("generated_title", "")
+            bm.generated_description = ai.get("generated_description", "")
+            bm.category = ai.get("category", "") or bm.category
+            bm.crawl_error = ai.get("crawl_error", "")
+
+            tags_str = ai.get("tags", "")
+            if tags_str:
+                existing = json.loads(bm.tags) if isinstance(bm.tags, str) else (bm.tags or [])
+                ai_tags = [t.strip() for t in tags_str.split(",") if t.strip()]
+                merged = list(set(existing + ai_tags))
+                bm.tags = json.dumps(merged, ensure_ascii=False)
+
+            db.add(AuditLog(user_id=user_id, action="ai_analyze", target_type="bookmark", target_id=bm.id))
+
+            with _progress_lock:
+                _analysis_progress[user_id]["completed"] += 1
+
+            db.commit()
+
+        with _progress_lock:
+            _analysis_progress[user_id]["running"] = False
+
+    except Exception as e:
+        with _progress_lock:
+            _analysis_progress[user_id]["running"] = False
+            _analysis_progress[user_id]["error"] = str(e)[:500]
+    finally:
+        db.close()
+
+
 @router.post("/analyze-all", response_model=Response)
 def analyze_all_bookmarks(
-    db = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """Run AI analysis on all bookmarks missing AI-generated fields (generated_title is empty)."""
-    result = db.execute(
-        select(Bookmark).where(
-            Bookmark.user_id == user.id,
-            Bookmark.generated_title == "",
-        )
-    )
-    candidates = result.scalars().all()
+    """Start background AI analysis on all bookmarks missing AI-generated fields."""
+    with _progress_lock:
+        task = _analysis_progress.get(user.id)
+        if task and task["running"]:
+            return Response.ok(data={"message": "Analysis already in progress", "progress": _progress_snapshot(user.id)})
 
-    analyzed = 0
-    for bm in candidates:
-        ai = analyze_bookmark(
-            url=bm.url,
-            bookmark_title=bm.title,
-            page_title=getattr(bm, "page_title", "") or "",
-            page_description=getattr(bm, "page_description", "") or "",
-            page_text=getattr(bm, "page_text", "") or "",
-        )
+    thread = threading.Thread(target=_run_analysis, args=(user.id,), daemon=True)
+    thread.start()
+    return Response.ok(data={"message": "Analysis started", "progress": {"total": 0, "completed": 0, "running": True}})
 
-        bm.generated_title = ai.get("generated_title", "")
-        bm.generated_description = ai.get("generated_description", "")
-        bm.category = ai.get("category", "") or bm.category
-        bm.crawl_error = ai.get("crawl_error", "")
 
-        tags_str = ai.get("tags", "")
-        if tags_str:
-            existing = json.loads(bm.tags) if isinstance(bm.tags, str) else (bm.tags or [])
-            ai_tags = [t.strip() for t in tags_str.split(",") if t.strip()]
-            merged = list(set(existing + ai_tags))
-            bm.tags = json.dumps(merged, ensure_ascii=False)
+@router.get("/analyze-progress", response_model=Response)
+def get_analysis_progress(
+    user: User = Depends(get_current_user),
+):
+    """Get progress of running analysis task."""
+    return Response.ok(data=_progress_snapshot(user.id))
 
-        db.add(AuditLog(user_id=user.id, action="ai_analyze", target_type="bookmark", target_id=bm.id))
-        analyzed += 1
 
-    db.commit()
-    return Response.ok(data={"analyzed": analyzed, "total_candidates": len(candidates)})
+def _progress_snapshot(user_id: int) -> dict:
+    p = _analysis_progress.get(user_id, {})
+    return {
+        "total": p.get("total", 0),
+        "completed": p.get("completed", 0),
+        "running": p.get("running", False),
+        "error": p.get("error", ""),
+    }
 
 
 def _to_out(bm: Bookmark, tags: list) -> BookmarkOut:

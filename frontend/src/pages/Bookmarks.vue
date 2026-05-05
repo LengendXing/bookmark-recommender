@@ -117,14 +117,29 @@
           {{ t('bookmarks.export') }}
         </button>
         <button
+          v-if="!analyzeLoading"
           @click="handleAnalyzeAll"
-          :disabled="analyzeLoading"
-          class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+          class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
           style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
         >
           <Sparkles class="w-4 h-4" />
-          {{ analyzeLoading ? '...' : t('bookmarks.analyzeAll') }}
+          {{ t('bookmarks.analyzeAll') }}
         </button>
+        <div
+          v-else
+          class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium min-w-[140px]"
+          style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
+        >
+          <Sparkles class="w-4 h-4 flex-shrink-0" />
+          <div class="flex-1 h-2 rounded-full overflow-hidden" style="background-color: hsl(var(--muted))">
+            <div
+              class="h-full transition-all duration-300 rounded-full"
+              style="background-color: hsl(var(--accent))"
+              :style="{ width: analyzePercent + '%' }"
+            ></div>
+          </div>
+          <span class="text-xs flex-shrink-0">{{ analyzeProgress.completed }}/{{ analyzeProgress.total }}</span>
+        </div>
       </div>
 
       <!-- Add Bookmark Modal -->
@@ -624,6 +639,12 @@ const semanticError = ref('')
 
 const analyzeLoading = ref(false)
 const analyzeMsg = ref('')
+const analyzeProgress = ref({ total: 0, completed: 0, running: false })
+const analyzePercent = computed(() => {
+  if (!analyzeProgress.value.total) return 0
+  return Math.round((analyzeProgress.value.completed / analyzeProgress.value.total) * 100)
+})
+let _pollTimer: ReturnType<typeof setInterval> | null = null
 
 const handleSemanticSearch = async () => {
   if (!searchQuery.value.trim()) return
@@ -651,14 +672,33 @@ const handleAnalyzeAll = async () => {
   analyzeLoading.value = true
   analyzeMsg.value = ''
   try {
-    const res = await bookmarks.analyzeAll()
-    const data = res.data
-    analyzeMsg.value = `AI analysis complete: ${data.analyzed || 0} bookmarks updated`
-    load()
+    await bookmarks.analyzeAll()
+    _pollTimer = setInterval(async () => {
+      try {
+        const res = await bookmarks.analyzeProgress()
+        const p = res.data
+        analyzeProgress.value = p
+        if (!p.running) {
+          clearInterval(_pollTimer!)
+          _pollTimer = null
+          analyzeLoading.value = false
+          if (p.error) {
+            analyzeMsg.value = `Analysis failed: ${p.error}`
+          } else {
+            analyzeMsg.value = `AI analysis complete: ${p.completed} bookmarks updated`
+          }
+          load()
+        }
+      } catch (_) {
+        clearInterval(_pollTimer!)
+        _pollTimer = null
+        analyzeLoading.value = false
+        analyzeMsg.value = 'Failed to check progress'
+      }
+    }, 800)
   } catch (e: any) {
-    analyzeMsg.value = e.response?.data?.message || 'Analysis failed'
-  } finally {
     analyzeLoading.value = false
+    analyzeMsg.value = e.response?.data?.message || 'Analysis failed'
   }
 }
 
@@ -770,5 +810,8 @@ watch(searchMode, () => {
   if (semanticMode.value) clearSemanticSearch()
 })
 onMounted(() => { load(); loadCollections(); document.addEventListener('click', closeMenu) })
-onUnmounted(() => { document.removeEventListener('click', closeMenu) })
+onUnmounted(() => {
+  document.removeEventListener('click', closeMenu)
+  if (_pollTimer) clearInterval(_pollTimer)
+})
 </script>
