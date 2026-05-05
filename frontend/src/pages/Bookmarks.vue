@@ -51,21 +51,51 @@
 
       <!-- Toolbar -->
       <div class="flex flex-wrap items-end gap-3 mb-6">
-        <div class="flex-1 min-w-0 max-w-xs">
+        <div class="flex-1 min-w-0 max-w-sm">
           <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.search') }}</label>
-          <div class="relative">
-            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-            <input
-              v-model="searchQuery"
-              :placeholder="t('bookmarks.search')"
-              class="w-full pl-9 pr-3 py-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/30"
+          <div class="flex gap-1.5">
+            <select
+              v-model="searchMode"
+              class="px-2.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 flex-shrink-0"
               style="background-color: hsl(var(--muted) / 0.6)"
-            />
+            >
+              <option value="normal">{{ t('bookmarks.searchNormal') }}</option>
+              <option value="semantic">{{ t('bookmarks.searchSemantic') }}</option>
+            </select>
+            <div class="relative flex-1">
+              <Search v-if="searchMode === 'normal'" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+              <Sparkles v-else class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent/60" />
+              <input
+                v-model="searchQuery"
+                :placeholder="searchMode === 'normal' ? t('bookmarks.search') : t('bookmarks.semanticPlaceholder')"
+                @keyup.enter="searchMode === 'semantic' && handleSemanticSearch()"
+                class="w-full pl-9 pr-3 py-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/30"
+                style="background-color: hsl(var(--muted) / 0.6)"
+              />
+            </div>
           </div>
         </div>
         <button
+          v-if="searchMode === 'semantic'"
+          @click="handleSemanticSearch"
+          :disabled="semanticLoading"
+          class="flex items-center gap-1.5 px-4 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+        >
+          <Search class="w-4 h-4" />
+          {{ semanticLoading ? '...' : t('bookmarks.search') }}
+        </button>
+        <button
+          v-if="semanticMode"
+          @click="clearSemanticSearch"
+          class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+          style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
+        >
+          {{ t('common.cancel') }}
+        </button>
+        <button
           @click="showAddModal = true"
-          class="flex items-center gap-1.5 px-4 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+          class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+          style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
         >
           <Plus class="w-4 h-4" />
           {{ t('bookmarks.add') }}
@@ -85,6 +115,15 @@
         >
           <FileDown class="w-4 h-4" />
           {{ t('bookmarks.export') }}
+        </button>
+        <button
+          @click="handleAnalyzeAll"
+          :disabled="analyzeLoading"
+          class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+          style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
+        >
+          <Sparkles class="w-4 h-4" />
+          {{ analyzeLoading ? '...' : t('bookmarks.analyzeAll') }}
         </button>
       </div>
 
@@ -265,42 +304,14 @@
         </div>
       </div>
 
-      <!-- Semantic Search -->
-      <div class="flex flex-wrap items-end gap-3 mb-6">
-        <div class="flex-1 min-w-0 max-w-xs">
-          <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.semanticSearch') }}</label>
-          <div class="relative">
-            <Sparkles class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent/60" />
-            <input
-              v-model="semanticQuery"
-              :placeholder="t('bookmarks.semanticPlaceholder')"
-              @keyup.enter="handleSemanticSearch"
-              class="w-full pl-9 pr-3 py-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/30"
-              style="background-color: hsl(var(--muted) / 0.6)"
-            />
-          </div>
-        </div>
-        <button
-          @click="handleSemanticSearch"
-          :disabled="semanticLoading"
-          class="flex items-center gap-1.5 px-4 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
-        >
-          <Search class="w-4 h-4" />
-          {{ semanticLoading ? '...' : t('bookmarks.search') }}
-        </button>
-        <button
-          v-if="semanticMode"
-          @click="clearSemanticSearch"
-          class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
-          style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
-        >
-          {{ t('common.cancel') }}
-        </button>
-      </div>
-
       <!-- Semantic Error -->
       <div v-if="semanticError" class="mb-4 px-4 py-3 rounded-xl text-sm font-medium" style="background-color: hsl(var(--destructive) / 0.08); color: hsl(var(--destructive))">
         {{ semanticError }}
+      </div>
+
+      <!-- Analyze Result -->
+      <div v-if="analyzeMsg" class="mb-4 px-4 py-3 rounded-xl text-sm font-medium" :style="analyzeMsg.includes('failed') ? 'background-color: hsl(var(--destructive) / 0.08); color: hsl(var(--destructive))' : 'background-color: hsl(var(--success) / 0.08); color: hsl(var(--success))'">
+        {{ analyzeMsg }}
       </div>
 
       <!-- Table -->
@@ -428,6 +439,7 @@ const total = ref(0)
 const page = ref(1)
 const pageSize = 20
 const searchQuery = ref('')
+const searchMode = ref<'normal' | 'semantic'>('normal')
 const error = ref('')
 
 // Collections
@@ -606,17 +618,19 @@ const openDrawer = async (id: number) => {
 const closeDrawer = () => { showDrawer.value = false }
 
 const semanticMode = ref(false)
-const semanticQuery = ref('')
 const semanticLoading = ref(false)
 const semanticResults = ref<any[]>([])
 const semanticError = ref('')
 
+const analyzeLoading = ref(false)
+const analyzeMsg = ref('')
+
 const handleSemanticSearch = async () => {
-  if (!semanticQuery.value.trim()) return
+  if (!searchQuery.value.trim()) return
   semanticLoading.value = true
   semanticError.value = ''
   try {
-    const res = await recommend.search(semanticQuery.value, 20)
+    const res = await recommend.search(searchQuery.value, 20)
     semanticResults.value = res.data || []
     semanticMode.value = true
   } catch (e: any) {
@@ -628,8 +642,24 @@ const handleSemanticSearch = async () => {
 
 const clearSemanticSearch = () => {
   semanticMode.value = false
-  semanticQuery.value = ''
+  searchQuery.value = ''
   semanticResults.value = []
+  load()
+}
+
+const handleAnalyzeAll = async () => {
+  analyzeLoading.value = true
+  analyzeMsg.value = ''
+  try {
+    const res = await bookmarks.analyzeAll()
+    const data = res.data
+    analyzeMsg.value = `AI analysis complete: ${data.analyzed || 0} bookmarks updated`
+    load()
+  } catch (e: any) {
+    analyzeMsg.value = e.response?.data?.message || 'Analysis failed'
+  } finally {
+    analyzeLoading.value = false
+  }
 }
 
 const displayItems = computed(() => semanticMode.value ? semanticResults.value : items.value)
@@ -733,7 +763,12 @@ const closeMenu = (e: MouseEvent) => {
   }
 }
 
-watch(searchQuery, () => { page.value = 1; load() })
+watch(searchQuery, () => {
+  if (searchMode.value === 'normal') { page.value = 1; load() }
+})
+watch(searchMode, () => {
+  if (semanticMode.value) clearSemanticSearch()
+})
 onMounted(() => { load(); loadCollections(); document.addEventListener('click', closeMenu) })
 onUnmounted(() => { document.removeEventListener('click', closeMenu) })
 </script>

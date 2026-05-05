@@ -27,6 +27,8 @@
   "bookmarks": {
     "title": "Bookmark Manager",
     "search": "Search bookmarks",
+    "searchNormal": "Normal Search",
+    "searchSemantic": "Semantic Search",
     "semanticSearch": "Semantic Search",
     "semanticPlaceholder": "Describe what you're looking for...",
     "relevance": "Relevance",
@@ -62,7 +64,8 @@
     "folderPath": "Browser Folder",
     "dateAdded": "Date Added",
     "crawlError": "Crawl Error",
-    "moveToCollection": "Move to"
+    "moveToCollection": "Move to",
+    "analyzeAll": "AI Analyze All"
   },
   "collections": {
     "title": "Collections",

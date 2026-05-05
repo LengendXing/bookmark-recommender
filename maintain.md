@@ -1,5 +1,21 @@
 # Bookmark Recommender 维护日志
 
+## v0.2.5 - 2026-05-05
+### 变更内容
+- 搜索框合并：常规搜索 + 智能搜索 → 单个输入框 + 前置下拉切换（常规搜索/智能搜索）
+- 新增「一键分析」按钮：对缺少 AI 字段的历史书签批量调用 AI 分析补全
+- 新增 `POST /api/bookmarks/analyze-all` 端点，查找 generated_title 为空的书签并批量分析更新
+- 新增按钮样式修复：加上与导入/导出一致的 muted 圆角背景
+
+### 影响范围
+- 后端：api/bookmarks.py（新增 analyze-all 端点）
+- 前端：Bookmarks.vue（搜索框合并、一键分析按钮、新增按钮样式）、api/index.ts、i18n/locales/*.json
+
+### 功能列表
+- 搜索模式切换（常规搜索 / 智能搜索），单输入框
+- 一键分析（批量 AI 分析历史书签，补全生成字段）
+- 新增按钮样式统一
+
 ## v0.2.4 - 2026-05-05
 ### 变更内容
 - AI 服务支持双 provider：OpenAI Compatible / Claude Proxy (Anthropic)

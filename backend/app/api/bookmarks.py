@@ -14,6 +14,7 @@ from app.models.user import User
 from app.schemas import Response, ERROR_BAD_REQUEST, ERROR_NOT_FOUND
 from app.schemas.bookmark import BookmarkCreate, BookmarkMove, BookmarkOut, BookmarkUpdate
 from app.services.ingest import ingest_bulk, ingest_single
+from app.services.ai_service import analyze_bookmark
 from app.services.import_service import import_bookmarks_with_ai
 
 router = APIRouter()
@@ -225,6 +226,49 @@ def move_bookmark(
     db.refresh(bm)
     tags = json.loads(bm.tags) if isinstance(bm.tags, str) else []
     return Response.ok(data=_to_out(bm, tags).model_dump())
+
+
+@router.post("/analyze-all", response_model=Response)
+def analyze_all_bookmarks(
+    db = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Run AI analysis on all bookmarks missing AI-generated fields (generated_title is empty)."""
+    result = db.execute(
+        select(Bookmark).where(
+            Bookmark.user_id == user.id,
+            Bookmark.generated_title == "",
+        )
+    )
+    candidates = result.scalars().all()
+
+    analyzed = 0
+    for bm in candidates:
+        ai = analyze_bookmark(
+            url=bm.url,
+            bookmark_title=bm.title,
+            page_title=getattr(bm, "page_title", "") or "",
+            page_description=getattr(bm, "page_description", "") or "",
+            page_text=getattr(bm, "page_text", "") or "",
+        )
+
+        bm.generated_title = ai.get("generated_title", "")
+        bm.generated_description = ai.get("generated_description", "")
+        bm.category = ai.get("category", "") or bm.category
+        bm.crawl_error = ai.get("crawl_error", "")
+
+        tags_str = ai.get("tags", "")
+        if tags_str:
+            existing = json.loads(bm.tags) if isinstance(bm.tags, str) else (bm.tags or [])
+            ai_tags = [t.strip() for t in tags_str.split(",") if t.strip()]
+            merged = list(set(existing + ai_tags))
+            bm.tags = json.dumps(merged, ensure_ascii=False)
+
+        db.add(AuditLog(user_id=user.id, action="ai_analyze", target_type="bookmark", target_id=bm.id))
+        analyzed += 1
+
+    db.commit()
+    return Response.ok(data={"analyzed": analyzed, "total_candidates": len(candidates)})
 
 
 def _to_out(bm: Bookmark, tags: list) -> BookmarkOut:
