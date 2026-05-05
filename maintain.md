@@ -1,5 +1,23 @@
 # Bookmark Recommender 维护日志
 
+## v0.2.4 - 2026-05-05
+### 变更内容
+- AI 服务支持双 provider：OpenAI Compatible / Claude Proxy (Anthropic)
+- `br_system_config` 新增 `api_provider` 和 `ai_model` 配置项
+- 新增 `POST /api/system-config/test` 端点，支持模型连接测试
+- 新增 `POST /api/system-config/models` 端点，获取可用模型列表
+- 系统配置页面新增 API Provider 下拉、Model 输入框、连接测试区域
+- 修复 Settings.vue 中 Axios 响应拦截后双层 data 路径问题
+
+### 影响范围
+- 后端：api/system_config.py, services/ai_service.py
+- 前端：Settings.vue, api/index.ts, i18n/locales/*.json
+
+### 功能列表
+- OpenAI / Anthropic 双 provider 切换
+- 模型测试（下拉选模型 → 测试 → 展示成功/失败+Token 用量）
+- 模型列表自动获取
+
 ## v0.2.2 - 2026-05-05
 ### 变更内容
 - 新增 `br_collections` 表实现书签收藏夹管理（平铺式，无嵌套）
