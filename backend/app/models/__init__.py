@@ -4,5 +4,6 @@ from app.models.bookmark import Bookmark
 from app.models.audit_log import AuditLog
 from app.models.model_version import ModelVersion
 from app.models.system_config import SystemConfig
+from app.models.collection import Collection
 
-__all__ = ["Base", "TimestampMixin", "User", "Bookmark", "AuditLog", "ModelVersion", "SystemConfig"]
+__all__ = ["Base", "TimestampMixin", "User", "Bookmark", "AuditLog", "ModelVersion", "SystemConfig", "Collection"]

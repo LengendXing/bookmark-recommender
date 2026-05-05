@@ -9,9 +9,10 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.audit_log import AuditLog
 from app.models.bookmark import Bookmark
+from app.models.collection import Collection
 from app.models.user import User
 from app.schemas import Response, ERROR_BAD_REQUEST, ERROR_NOT_FOUND
-from app.schemas.bookmark import BookmarkCreate, BookmarkOut, BookmarkUpdate
+from app.schemas.bookmark import BookmarkCreate, BookmarkMove, BookmarkOut, BookmarkUpdate
 from app.services.ingest import ingest_bulk, ingest_single
 from app.services.import_service import import_bookmarks_with_ai
 
@@ -77,6 +78,7 @@ def list_bookmarks(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     search: str = Query("", description="Search title/description"),
+    collection_id: int | None = Query(None, description="Filter by collection"),
     db = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -85,6 +87,8 @@ def list_bookmarks(
         q = q.where(
             (Bookmark.title.ilike(f"%{search}%")) | (Bookmark.description.ilike(f"%{search}%"))
         )
+    if collection_id is not None:
+        q = q.where(Bookmark.collection_id == collection_id)
     total = db.execute(select(func.count()).select_from(q.subquery())).scalar() or 0
 
     q = q.order_by(Bookmark.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
@@ -199,6 +203,30 @@ def delete_bookmark(
     return Response.ok(data={"deleted": bookmark_id})
 
 
+@router.post("/{bookmark_id}/move", response_model=Response)
+def move_bookmark(
+    bookmark_id: int,
+    body: BookmarkMove,
+    db = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    result = db.execute(select(Bookmark).where(Bookmark.id == bookmark_id, Bookmark.user_id == user.id)).scalar_one_or_none()
+    bm = result
+    if bm is None:
+        raise HTTPException(status_code=404, detail=Response.error(ERROR_NOT_FOUND, "Bookmark not found").model_dump_json())
+
+    if body.collection_id is not None:
+        col = db.execute(select(Collection).where(Collection.id == body.collection_id, Collection.user_id == user.id)).scalar_one_or_none()
+        if col is None:
+            raise HTTPException(status_code=400, detail=Response.error(ERROR_BAD_REQUEST, "Collection not found").model_dump_json())
+
+    bm.collection_id = body.collection_id
+    db.commit()
+    db.refresh(bm)
+    tags = json.loads(bm.tags) if isinstance(bm.tags, str) else []
+    return Response.ok(data=_to_out(bm, tags).model_dump())
+
+
 def _to_out(bm: Bookmark, tags: list) -> BookmarkOut:
     return BookmarkOut(
         id=bm.id,
@@ -220,4 +248,5 @@ def _to_out(bm: Bookmark, tags: list) -> BookmarkOut:
         generated_title=getattr(bm, 'generated_title', '') or '',
         generated_description=getattr(bm, 'generated_description', '') or '',
         crawl_error=getattr(bm, 'crawl_error', '') or '',
+        collection_id=getattr(bm, 'collection_id', None),
     )

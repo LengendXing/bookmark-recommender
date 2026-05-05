@@ -61,7 +61,21 @@
     "importInfo": "导入信息",
     "folderPath": "浏览器文件夹",
     "dateAdded": "添加日期",
-    "crawlError": "爬取错误"
+    "crawlError": "爬取错误",
+    "moveToCollection": "移动到"
+  },
+  "collections": {
+    "title": "收藏夹",
+    "allBookmarks": "全部书签",
+    "create": "新建",
+    "edit": "编辑",
+    "name": "名称",
+    "description": "描述",
+    "delete": "删除",
+    "deleteConfirm": "删除收藏夹不会删除其中的书签，它们将变为无分类。",
+    "moveTo": "移动到...",
+    "noCollection": "无收藏夹",
+    "bookmarkCount": "个书签"
   },
   "common": {
     "cancel": "取消",

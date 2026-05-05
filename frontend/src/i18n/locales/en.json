@@ -61,7 +61,21 @@
     "importInfo": "Import Info",
     "folderPath": "Browser Folder",
     "dateAdded": "Date Added",
-    "crawlError": "Crawl Error"
+    "crawlError": "Crawl Error",
+    "moveToCollection": "Move to"
+  },
+  "collections": {
+    "title": "Collections",
+    "allBookmarks": "All Bookmarks",
+    "create": "Create",
+    "edit": "Edit",
+    "name": "Name",
+    "description": "Description",
+    "delete": "Delete",
+    "deleteConfirm": "Deleting a collection won't delete its bookmarks, they'll become unassigned.",
+    "moveTo": "Move to...",
+    "noCollection": "No Collection",
+    "bookmarkCount": "bookmarks"
   },
   "common": {
     "cancel": "Cancel",

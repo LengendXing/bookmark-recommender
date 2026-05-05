@@ -44,8 +44,13 @@ class BookmarkOut(BaseModel):
     generated_title: str = ""
     generated_description: str = ""
     crawl_error: str = ""
+    collection_id: int | None = None
 
     model_config = {"from_attributes": True}
+
+
+class BookmarkMove(BaseModel):
+    collection_id: int | None = None
 
 
 class RecommendRequest(BaseModel):

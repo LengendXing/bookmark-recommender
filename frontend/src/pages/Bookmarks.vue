@@ -1,247 +1,332 @@
 <template>
-  <div class="p-6 lg:p-8">
-    <h2 class="text-xl font-semibold tracking-tight mb-6">{{ t('bookmarks.title') }}</h2>
-
-    <!-- Toolbar -->
-    <div class="flex flex-wrap items-end gap-3 mb-6">
-      <div class="flex-1 min-w-0 max-w-xs">
-        <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.search') }}</label>
-        <div class="relative">
-          <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-          <input
-            v-model="searchQuery"
-            :placeholder="t('bookmarks.search')"
-            class="w-full pl-9 pr-3 py-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/30"
-            style="background-color: hsl(var(--muted) / 0.6)"
-          />
-        </div>
+  <div class="flex h-[calc(100vh-4rem)]">
+    <!-- Collections Sidebar -->
+    <aside class="w-56 flex-shrink-0 border-r border-border/50 flex flex-col" style="background-color: hsl(var(--card))">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-border/50">
+        <h3 class="text-sm font-semibold text-muted-foreground">{{ t('collections.title') }}</h3>
+        <button
+          @click="openCollectionCreate"
+          class="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+        >
+          <Plus class="w-3.5 h-3.5 text-muted-foreground" />
+        </button>
       </div>
-      <button
-        @click="showAddModal = true"
-        class="flex items-center gap-1.5 px-4 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
-      >
-        <Plus class="w-4 h-4" />
-        {{ t('bookmarks.add') }}
-      </button>
-      <button
-        @click="showImportModal = true"
-        class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
-        style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
-      >
-        <Upload class="w-4 h-4" />
-        {{ t('bookmarks.import') }}
-      </button>
-      <button
-        @click="handleExport"
-        class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
-        style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
-      >
-        <FileDown class="w-4 h-4" />
-        {{ t('bookmarks.export') }}
-      </button>
-    </div>
+      <div class="flex-1 overflow-y-auto py-1">
+        <!-- All Bookmarks -->
+        <button
+          @click="selectCollection(null)"
+          class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-muted/50"
+          :class="selectedCollectionId === null ? 'bg-accent/10 text-accent font-medium' : 'text-muted-foreground'"
+        >
+          <Folder class="w-4 h-4 flex-shrink-0" />
+          <span class="truncate">{{ t('collections.allBookmarks') }}</span>
+        </button>
+        <!-- Collection Items -->
+        <button
+          v-for="col in collections"
+          :key="col.id"
+          @click="selectCollection(col.id)"
+          class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-muted/50 group relative"
+          :class="selectedCollectionId === col.id ? 'bg-accent/10 text-accent font-medium' : 'text-muted-foreground'"
+        >
+          <Folder class="w-4 h-4 flex-shrink-0" />
+          <span class="truncate flex-1 text-left">{{ col.name }}</span>
+          <span class="text-xs text-muted-foreground/60">{{ col.bookmark_count }}</span>
+          <!-- Hover Actions -->
+          <div class="hidden group-hover:flex absolute right-2 top-1/2 -translate-y-1/2 gap-0.5 bg-card/90 backdrop-blur rounded-lg px-0.5 py-0.5">
+            <button @click.stop="openCollectionEdit(col)" class="w-5 h-5 flex items-center justify-center rounded hover:bg-muted transition-colors">
+              <Pencil class="w-3 h-3 text-muted-foreground" />
+            </button>
+            <button @click.stop="handleCollectionDelete(col.id)" class="w-5 h-5 flex items-center justify-center rounded hover:bg-destructive/10 transition-colors">
+              <Trash2 class="w-3 h-3 text-destructive/70" />
+            </button>
+          </div>
+        </button>
+      </div>
+    </aside>
 
-    <!-- Add Bookmark Modal -->
-    <div
-      v-if="showAddModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-      @click.self="showAddModal = false"
-    >
-      <div class="rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl" style="background-color: hsl(var(--card))">
-        <h3 class="text-lg font-semibold mb-4">{{ t('bookmarks.add') }}</h3>
-        <form @submit.prevent="handleAdd" class="space-y-4">
-          <div>
-            <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.url') }}</label>
-            <input v-model="addForm.url" type="url" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+    <!-- Main Content -->
+    <div class="flex-1 overflow-auto p-6 lg:p-8">
+      <h2 class="text-xl font-semibold tracking-tight mb-6">{{ t('bookmarks.title') }}</h2>
+
+      <!-- Toolbar -->
+      <div class="flex flex-wrap items-end gap-3 mb-6">
+        <div class="flex-1 min-w-0 max-w-xs">
+          <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.search') }}</label>
+          <div class="relative">
+            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
+            <input
+              v-model="searchQuery"
+              :placeholder="t('bookmarks.search')"
+              class="w-full pl-9 pr-3 py-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/30"
+              style="background-color: hsl(var(--muted) / 0.6)"
+            />
           </div>
-          <div>
-            <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.title') }}</label>
-            <input v-model="addForm.title" type="text" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
-          </div>
-          <div>
-            <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.description') }}</label>
-            <input v-model="addForm.description" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
-          </div>
-          <div class="grid grid-cols-2 gap-3">
+        </div>
+        <button
+          @click="showAddModal = true"
+          class="flex items-center gap-1.5 px-4 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+        >
+          <Plus class="w-4 h-4" />
+          {{ t('bookmarks.add') }}
+        </button>
+        <button
+          @click="showImportModal = true"
+          class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+          style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
+        >
+          <Upload class="w-4 h-4" />
+          {{ t('bookmarks.import') }}
+        </button>
+        <button
+          @click="handleExport"
+          class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+          style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
+        >
+          <FileDown class="w-4 h-4" />
+          {{ t('bookmarks.export') }}
+        </button>
+      </div>
+
+      <!-- Add Bookmark Modal -->
+      <div
+        v-if="showAddModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+        @click.self="showAddModal = false"
+      >
+        <div class="rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl" style="background-color: hsl(var(--card))">
+          <h3 class="text-lg font-semibold mb-4">{{ t('bookmarks.add') }}</h3>
+          <form @submit.prevent="handleAdd" class="space-y-4">
             <div>
-              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.author') }}</label>
-              <input v-model="addForm.author" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.url') }}</label>
+              <input v-model="addForm.url" type="url" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
             </div>
             <div>
-              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.category') }}</label>
-              <input v-model="addForm.category" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.title') }}</label>
+              <input v-model="addForm.title" type="text" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
             </div>
-          </div>
-          <div>
-            <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.tags') }}</label>
-            <input v-model="addForm.tagsStr" :placeholder="t('bookmarks.tagsHint')" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
-          </div>
-          <div class="flex gap-3 pt-2">
-            <button type="button" @click="showAddModal = false" class="flex-1 py-2 rounded-xl text-sm font-medium border border-border/50 hover:bg-muted transition-colors">{{ t('common.cancel') }}</button>
-            <button type="submit" :disabled="addLoading" class="flex-1 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ addLoading ? '...' : t('common.save') }}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Import Modal -->
-    <div
-      v-if="showImportModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-      @click.self="showImportModal = false"
-    >
-      <div class="rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl" style="background-color: hsl(var(--card))">
-        <h3 class="text-lg font-semibold mb-4">{{ t('bookmarks.import') }}</h3>
-        <div class="space-y-4">
-          <div>
-            <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.browserSource') }}</label>
-            <select v-model="importBrowser" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)">
-              <option value="">-- {{ t('bookmarks.selectBrowser') }} --</option>
-              <option value="chrome">Google Chrome</option>
-              <option value="firefox">Mozilla Firefox</option>
-              <option value="edge">Microsoft Edge</option>
-              <option value="safari">Apple Safari</option>
-              <option value="opera">Opera</option>
-            </select>
-          </div>
-          <div v-if="importBrowser">
-            <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.selectFile') }}</label>
-            <input ref="fileInput" type="file" accept=".html,.htm" @change="handleFileSelect" class="block w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:text-xs file:font-medium file:border-0 file:bg-accent/10 file:text-accent hover:file:bg-accent/20 transition-all" />
-          </div>
-          <p v-if="importError" class="text-destructive text-xs text-center">{{ importError }}</p>
-          <p v-if="importSuccess" class="text-xs text-center" style="color: hsl(var(--success))">{{ importSuccess }}</p>
-          <div class="flex gap-3 pt-2">
-            <button type="button" @click="showImportModal = false" class="flex-1 py-2 rounded-xl text-sm font-medium border border-border/50 hover:bg-muted transition-colors">{{ t('common.cancel') }}</button>
-            <button @click="handleImport" :disabled="!selectedFile || importLoading" class="flex-1 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ importLoading ? '...' : t('bookmarks.import') }}</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Semantic Search -->
-    <div class="flex flex-wrap items-end gap-3 mb-6">
-      <div class="flex-1 min-w-0 max-w-xs">
-        <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.semanticSearch') }}</label>
-        <div class="relative">
-          <Sparkles class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent/60" />
-          <input
-            v-model="semanticQuery"
-            :placeholder="t('bookmarks.semanticPlaceholder')"
-            @keyup.enter="handleSemanticSearch"
-            class="w-full pl-9 pr-3 py-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/30"
-            style="background-color: hsl(var(--muted) / 0.6)"
-          />
-        </div>
-      </div>
-      <button
-        @click="handleSemanticSearch"
-        :disabled="semanticLoading"
-        class="flex items-center gap-1.5 px-4 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
-      >
-        <Search class="w-4 h-4" />
-        {{ semanticLoading ? '...' : t('bookmarks.search') }}
-      </button>
-      <button
-        v-if="semanticMode"
-        @click="clearSemanticSearch"
-        class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
-        style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
-      >
-        {{ t('common.cancel') }}
-      </button>
-    </div>
-
-    <!-- Semantic Error -->
-    <div v-if="semanticError" class="mb-4 px-4 py-3 rounded-xl text-sm font-medium" style="background-color: hsl(var(--destructive) / 0.08); color: hsl(var(--destructive))">
-      {{ semanticError }}
-    </div>
-
-    <!-- Table -->
-    <div class="rounded-xl overflow-hidden" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04)">
-      <table class="w-full text-sm">
-        <thead>
-          <tr style="background-color: hsl(var(--muted) / 0.4)">
-            <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase w-12">#</th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase">Title</th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden md:table-cell">{{ t('bookmarks.tags') }}</th>
-            <th v-if="semanticMode" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden sm:table-cell w-20">{{ t('bookmarks.relevance') }}</th>
-            <th v-else class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden sm:table-cell w-20">Rating</th>
-            <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground tracking-wide uppercase w-24">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="bm in displayItems" :key="bm.id" class="border-t border-border/50 hover:bg-muted/30 transition-colors">
-            <td class="px-4 py-3 text-muted-foreground text-xs">{{ bm.id }}</td>
-            <td class="px-4 py-3">
-              <button @click="openDrawer(bm.id)" class="font-medium hover:text-accent transition-colors line-clamp-1 text-left">{{ bm.title }}</button>
-              <p class="text-xs text-muted-foreground line-clamp-1 mt-0.5 max-w-xs">{{ bm.description }}</p>
-            </td>
-            <td class="px-4 py-3 hidden md:table-cell">
-              <div class="flex flex-wrap gap-1">
-                <span v-for="tag in (bm.tags || [])" :key="tag" class="inline-block px-2 py-0.5 rounded-lg text-xs font-medium" style="background-color: hsl(var(--accent) / 0.08); color: hsl(var(--accent))">{{ tag }}</span>
+            <div>
+              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.description') }}</label>
+              <input v-model="addForm.description" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.author') }}</label>
+                <input v-model="addForm.author" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
               </div>
-            </td>
-            <td v-if="semanticMode" class="px-4 py-3 hidden sm:table-cell">
-              <span class="inline-block px-2 py-0.5 rounded-lg text-xs font-medium" :style="{ backgroundColor: `hsl(var(--accent) / ${(bm.score || 0) * 0.12})`, color: 'hsl(var(--accent))' }">{{ ((bm.score || 0) * 100).toFixed(0) }}%</span>
-            </td>
-            <td v-else class="px-4 py-3 hidden sm:table-cell font-medium">{{ bm.rating }}</td>
-            <td class="px-4 py-3 text-right">
-              <button
-                @click="handleDelete(bm.id)"
-                class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all"
-              >
-                <Trash2 class="w-3.5 h-3.5" />
-                <span class="hidden sm:inline">{{ t('bookmarks.delete') }}</span>
-              </button>
-            </td>
-          </tr>
-          <tr v-if="!displayItems.length">
-            <td colspan="5" class="px-4 py-16 text-center">
-              <Bookmark class="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-              <p class="text-muted-foreground text-sm">No bookmarks yet</p>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Pagination -->
-    <div v-if="!semanticMode" class="flex items-center justify-between mt-4">
-      <p class="text-xs text-muted-foreground">Total: {{ total }}</p>
-      <div class="flex gap-1.5">
-        <button
-          @click="page--"
-          :disabled="page <= 1"
-          class="px-3 py-1.5 rounded-lg text-xs font-medium border border-border/50 hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-        >Prev</button>
-        <button
-          @click="page++"
-          :disabled="page * pageSize >= total"
-          class="px-3 py-1.5 rounded-lg text-xs font-medium border border-border/50 hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-        >Next</button>
+              <div>
+                <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.category') }}</label>
+                <input v-model="addForm.category" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+              </div>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.tags') }}</label>
+              <input v-model="addForm.tagsStr" :placeholder="t('bookmarks.tagsHint')" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+            </div>
+            <div class="flex gap-3 pt-2">
+              <button type="button" @click="showAddModal = false" class="flex-1 py-2 rounded-xl text-sm font-medium border border-border/50 hover:bg-muted transition-colors">{{ t('common.cancel') }}</button>
+              <button type="submit" :disabled="addLoading" class="flex-1 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ addLoading ? '...' : t('common.save') }}</button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
 
-    <!-- Error -->
-    <div v-if="error" class="mt-4 px-4 py-3 rounded-xl text-sm font-medium" style="background-color: hsl(var(--destructive) / 0.08); color: hsl(var(--destructive))">
-      {{ error }}
-    </div>
+      <!-- Import Modal -->
+      <div
+        v-if="showImportModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+        @click.self="showImportModal = false"
+      >
+        <div class="rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl" style="background-color: hsl(var(--card))">
+          <h3 class="text-lg font-semibold mb-4">{{ t('bookmarks.import') }}</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.browserSource') }}</label>
+              <select v-model="importBrowser" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)">
+                <option value="">-- {{ t('bookmarks.selectBrowser') }} --</option>
+                <option value="chrome">Google Chrome</option>
+                <option value="firefox">Mozilla Firefox</option>
+                <option value="edge">Microsoft Edge</option>
+                <option value="safari">Apple Safari</option>
+                <option value="opera">Opera</option>
+              </select>
+            </div>
+            <div v-if="importBrowser">
+              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.selectFile') }}</label>
+              <input ref="fileInput" type="file" accept=".html,.htm" @change="handleFileSelect" class="block w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:text-xs file:font-medium file:border-0 file:bg-accent/10 file:text-accent hover:file:bg-accent/20 transition-all" />
+            </div>
+            <p v-if="importError" class="text-destructive text-xs text-center">{{ importError }}</p>
+            <p v-if="importSuccess" class="text-xs text-center" style="color: hsl(var(--success))">{{ importSuccess }}</p>
+            <div class="flex gap-3 pt-2">
+              <button type="button" @click="showImportModal = false" class="flex-1 py-2 rounded-xl text-sm font-medium border border-border/50 hover:bg-muted transition-colors">{{ t('common.cancel') }}</button>
+              <button @click="handleImport" :disabled="!selectedFile || importLoading" class="flex-1 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ importLoading ? '...' : t('bookmarks.import') }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <!-- Detail Drawer -->
-    <BookmarkDrawer
-      :visible="showDrawer"
-      :loading="drawerLoading"
-      :bookmark="selectedBookmark"
-      @close="closeDrawer"
-    />
+      <!-- Collection CRUD Modal -->
+      <div
+        v-if="showCollectionModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+        @click.self="closeCollectionModal"
+      >
+        <div class="rounded-2xl p-6 w-full max-w-sm mx-4 shadow-xl" style="background-color: hsl(var(--card))">
+          <h3 class="text-lg font-semibold mb-4">{{ editingCollection ? t('collections.edit') : t('collections.create') }}</h3>
+          <form @submit.prevent="handleCollectionSave" class="space-y-4">
+            <div>
+              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('collections.name') }}</label>
+              <input v-model="collectionForm.name" type="text" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+            </div>
+            <div>
+              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('collections.description') }}</label>
+              <input v-model="collectionForm.description" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+            </div>
+            <div class="flex gap-3 pt-2">
+              <button type="button" @click="closeCollectionModal" class="flex-1 py-2 rounded-xl text-sm font-medium border border-border/50 hover:bg-muted transition-colors">{{ t('common.cancel') }}</button>
+              <button type="submit" :disabled="collectionLoading" class="flex-1 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ collectionLoading ? '...' : t('common.save') }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Semantic Search -->
+      <div class="flex flex-wrap items-end gap-3 mb-6">
+        <div class="flex-1 min-w-0 max-w-xs">
+          <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.semanticSearch') }}</label>
+          <div class="relative">
+            <Sparkles class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent/60" />
+            <input
+              v-model="semanticQuery"
+              :placeholder="t('bookmarks.semanticPlaceholder')"
+              @keyup.enter="handleSemanticSearch"
+              class="w-full pl-9 pr-3 py-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/30"
+              style="background-color: hsl(var(--muted) / 0.6)"
+            />
+          </div>
+        </div>
+        <button
+          @click="handleSemanticSearch"
+          :disabled="semanticLoading"
+          class="flex items-center gap-1.5 px-4 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+        >
+          <Search class="w-4 h-4" />
+          {{ semanticLoading ? '...' : t('bookmarks.search') }}
+        </button>
+        <button
+          v-if="semanticMode"
+          @click="clearSemanticSearch"
+          class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+          style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
+        >
+          {{ t('common.cancel') }}
+        </button>
+      </div>
+
+      <!-- Semantic Error -->
+      <div v-if="semanticError" class="mb-4 px-4 py-3 rounded-xl text-sm font-medium" style="background-color: hsl(var(--destructive) / 0.08); color: hsl(var(--destructive))">
+        {{ semanticError }}
+      </div>
+
+      <!-- Table -->
+      <div class="rounded-xl overflow-hidden" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04)">
+        <table class="w-full text-sm">
+          <thead>
+            <tr style="background-color: hsl(var(--muted) / 0.4)">
+              <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase w-12">#</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase">Title</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden md:table-cell">{{ t('bookmarks.tags') }}</th>
+              <th v-if="semanticMode" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden sm:table-cell w-20">{{ t('bookmarks.relevance') }}</th>
+              <th v-else class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden sm:table-cell w-20">Rating</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground tracking-wide uppercase w-40">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="bm in displayItems" :key="bm.id" class="border-t border-border/50 hover:bg-muted/30 transition-colors">
+              <td class="px-4 py-3 text-muted-foreground text-xs">{{ bm.id }}</td>
+              <td class="px-4 py-3">
+                <button @click="openDrawer(bm.id)" class="font-medium hover:text-accent transition-colors line-clamp-1 text-left">{{ bm.title }}</button>
+                <p class="text-xs text-muted-foreground line-clamp-1 mt-0.5 max-w-xs">{{ bm.description }}</p>
+              </td>
+              <td class="px-4 py-3 hidden md:table-cell">
+                <div class="flex flex-wrap gap-1">
+                  <span v-for="tag in (bm.tags || [])" :key="tag" class="inline-block px-2 py-0.5 rounded-lg text-xs font-medium" style="background-color: hsl(var(--accent) / 0.08); color: hsl(var(--accent))">{{ tag }}</span>
+                </div>
+              </td>
+              <td v-if="semanticMode" class="px-4 py-3 hidden sm:table-cell">
+                <span class="inline-block px-2 py-0.5 rounded-lg text-xs font-medium" :style="{ backgroundColor: `hsl(var(--accent) / ${(bm.score || 0) * 0.12})`, color: 'hsl(var(--accent))' }">{{ ((bm.score || 0) * 100).toFixed(0) }}%</span>
+              </td>
+              <td v-else class="px-4 py-3 hidden sm:table-cell font-medium">{{ bm.rating }}</td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex items-center justify-end gap-1">
+                  <select
+                    class="text-xs rounded-lg px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-accent/30"
+                    style="background-color: hsl(var(--muted) / 0.6)"
+                    :value="bm.collection_id ?? ''"
+                    @change="handleMoveBookmark(bm.id, $event)"
+                  >
+                    <option value="">{{ t('collections.moveTo') }}</option>
+                    <option value="__none__">{{ t('collections.noCollection') }}</option>
+                    <option v-for="col in collections" :key="col.id" :value="col.id">{{ col.name }}</option>
+                  </select>
+                  <button
+                    @click="handleDelete(bm.id)"
+                    class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all"
+                  >
+                    <Trash2 class="w-3.5 h-3.5" />
+                    <span class="hidden sm:inline">{{ t('bookmarks.delete') }}</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr v-if="!displayItems.length">
+              <td colspan="5" class="px-4 py-16 text-center">
+                <Bookmark class="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+                <p class="text-muted-foreground text-sm">No bookmarks yet</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div v-if="!semanticMode" class="flex items-center justify-between mt-4">
+        <p class="text-xs text-muted-foreground">Total: {{ total }}</p>
+        <div class="flex gap-1.5">
+          <button
+            @click="page--"
+            :disabled="page <= 1"
+            class="px-3 py-1.5 rounded-lg text-xs font-medium border border-border/50 hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >Prev</button>
+          <button
+            @click="page++"
+            :disabled="page * pageSize >= total"
+            class="px-3 py-1.5 rounded-lg text-xs font-medium border border-border/50 hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >Next</button>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div v-if="error" class="mt-4 px-4 py-3 rounded-xl text-sm font-medium" style="background-color: hsl(var(--destructive) / 0.08); color: hsl(var(--destructive))">
+        {{ error }}
+      </div>
+
+      <!-- Detail Drawer -->
+      <BookmarkDrawer
+        :visible="showDrawer"
+        :loading="drawerLoading"
+        :bookmark="selectedBookmark"
+        @close="closeDrawer"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { bookmarks, recommend } from '@/api'
-import { Search, Plus, Upload, FileDown, Trash2, Bookmark, Sparkles } from 'lucide-vue-next'
+import { bookmarks, collections as collectionsApi, recommend } from '@/api'
+import { Search, Plus, Upload, FileDown, Trash2, Bookmark, Sparkles, Folder, Pencil } from 'lucide-vue-next'
 import BookmarkDrawer from '@/components/BookmarkDrawer.vue'
 
 const { t } = useI18n()
@@ -251,6 +336,83 @@ const page = ref(1)
 const pageSize = 20
 const searchQuery = ref('')
 const error = ref('')
+
+// Collections
+const collections = ref<any[]>([])
+const selectedCollectionId = ref<number | null>(null)
+const showCollectionModal = ref(false)
+const editingCollection = ref<any>(null)
+const collectionLoading = ref(false)
+const collectionForm = ref({ name: '', description: '' })
+
+const loadCollections = async () => {
+  try {
+    const res = await collectionsApi.list()
+    collections.value = res.data || []
+  } catch (_) {}
+}
+
+const selectCollection = (colId: number | null) => {
+  selectedCollectionId.value = colId
+  page.value = 1
+  load()
+}
+
+const openCollectionCreate = () => {
+  editingCollection.value = null
+  collectionForm.value = { name: '', description: '' }
+  showCollectionModal.value = true
+}
+
+const openCollectionEdit = (col: any) => {
+  editingCollection.value = col
+  collectionForm.value = { name: col.name, description: col.description }
+  showCollectionModal.value = true
+}
+
+const closeCollectionModal = () => {
+  showCollectionModal.value = false
+  editingCollection.value = null
+}
+
+const handleCollectionSave = async () => {
+  collectionLoading.value = true
+  try {
+    if (editingCollection.value) {
+      await collectionsApi.update(editingCollection.value.id, collectionForm.value)
+    } else {
+      await collectionsApi.create(collectionForm.value)
+    }
+    closeCollectionModal()
+    loadCollections()
+  } catch (_) {} finally {
+    collectionLoading.value = false
+  }
+}
+
+const handleCollectionDelete = async (colId: number) => {
+  if (!confirm(t('collections.deleteConfirm'))) return
+  try {
+    await collectionsApi.delete(colId)
+    if (selectedCollectionId.value === colId) {
+      selectedCollectionId.value = null
+    }
+    loadCollections()
+    load()
+  } catch (_) {}
+}
+
+const handleMoveBookmark = async (bookmarkId: number, event: Event) => {
+  const target = event.target as HTMLSelectElement
+  const val = target.value
+  if (val === '') return
+  const colId = val === '__none__' ? null : parseInt(val)
+  try {
+    await bookmarks.move(bookmarkId, colId)
+    load()
+    loadCollections()
+  } catch (_) {}
+}
 
 // Add modal
 const showAddModal = ref(false)
@@ -317,7 +479,11 @@ const displayItems = computed(() => semanticMode.value ? semanticResults.value :
 const load = async () => {
   error.value = ''
   try {
-    const res = await bookmarks.list({ page: page.value, page_size: pageSize, search: searchQuery.value })
+    const params: any = { page: page.value, page_size: pageSize, search: searchQuery.value }
+    if (selectedCollectionId.value !== null) {
+      params.collection_id = selectedCollectionId.value
+    }
+    const res = await bookmarks.list(params)
     items.value = res.data.items
     total.value = res.data.total
   } catch (e: any) {
@@ -403,5 +569,5 @@ const handleDelete = async (id: number) => {
 }
 
 watch(searchQuery, () => { page.value = 1; load() })
-onMounted(load)
+onMounted(() => { load(); loadCollections() })
 </script>

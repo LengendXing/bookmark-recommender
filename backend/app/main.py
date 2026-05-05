@@ -40,12 +40,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.api import auth, bookmarks, recommend, system_config
+from app.api import auth, bookmarks, recommend, system_config, collections
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(bookmarks.router, prefix="/api/bookmarks", tags=["bookmarks"])
 app.include_router(recommend.router, prefix="/api/recommend", tags=["recommend"])
 app.include_router(system_config.router, prefix="/api/system-config", tags=["system"])
+app.include_router(collections.router, prefix="/api/collections", tags=["collections"])
 
 
 @app.get("/health")
