@@ -118,6 +118,44 @@
       </div>
     </div>
 
+    <!-- Semantic Search -->
+    <div class="flex flex-wrap items-end gap-3 mb-6">
+      <div class="flex-1 min-w-0 max-w-xs">
+        <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.semanticSearch') }}</label>
+        <div class="relative">
+          <Sparkles class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent/60" />
+          <input
+            v-model="semanticQuery"
+            :placeholder="t('bookmarks.semanticPlaceholder')"
+            @keyup.enter="handleSemanticSearch"
+            class="w-full pl-9 pr-3 py-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/30"
+            style="background-color: hsl(var(--muted) / 0.6)"
+          />
+        </div>
+      </div>
+      <button
+        @click="handleSemanticSearch"
+        :disabled="semanticLoading"
+        class="flex items-center gap-1.5 px-4 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+      >
+        <Search class="w-4 h-4" />
+        {{ semanticLoading ? '...' : t('bookmarks.search') }}
+      </button>
+      <button
+        v-if="semanticMode"
+        @click="clearSemanticSearch"
+        class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+        style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
+      >
+        {{ t('common.cancel') }}
+      </button>
+    </div>
+
+    <!-- Semantic Error -->
+    <div v-if="semanticError" class="mb-4 px-4 py-3 rounded-xl text-sm font-medium" style="background-color: hsl(var(--destructive) / 0.08); color: hsl(var(--destructive))">
+      {{ semanticError }}
+    </div>
+
     <!-- Table -->
     <div class="rounded-xl overflow-hidden" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04)">
       <table class="w-full text-sm">
@@ -126,12 +164,13 @@
             <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase w-12">#</th>
             <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase">Title</th>
             <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden md:table-cell">{{ t('bookmarks.tags') }}</th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden sm:table-cell w-20">Rating</th>
+            <th v-if="semanticMode" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden sm:table-cell w-20">{{ t('bookmarks.relevance') }}</th>
+            <th v-else class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden sm:table-cell w-20">Rating</th>
             <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground tracking-wide uppercase w-24">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="bm in items" :key="bm.id" class="border-t border-border/50 hover:bg-muted/30 transition-colors">
+          <tr v-for="bm in displayItems" :key="bm.id" class="border-t border-border/50 hover:bg-muted/30 transition-colors">
             <td class="px-4 py-3 text-muted-foreground text-xs">{{ bm.id }}</td>
             <td class="px-4 py-3">
               <button @click="openDrawer(bm.id)" class="font-medium hover:text-accent transition-colors line-clamp-1 text-left">{{ bm.title }}</button>
@@ -142,7 +181,10 @@
                 <span v-for="tag in (bm.tags || [])" :key="tag" class="inline-block px-2 py-0.5 rounded-lg text-xs font-medium" style="background-color: hsl(var(--accent) / 0.08); color: hsl(var(--accent))">{{ tag }}</span>
               </div>
             </td>
-            <td class="px-4 py-3 hidden sm:table-cell font-medium">{{ bm.rating }}</td>
+            <td v-if="semanticMode" class="px-4 py-3 hidden sm:table-cell">
+              <span class="inline-block px-2 py-0.5 rounded-lg text-xs font-medium" :style="{ backgroundColor: `hsl(var(--accent) / ${(bm.score || 0) * 0.12})`, color: 'hsl(var(--accent))' }">{{ ((bm.score || 0) * 100).toFixed(0) }}%</span>
+            </td>
+            <td v-else class="px-4 py-3 hidden sm:table-cell font-medium">{{ bm.rating }}</td>
             <td class="px-4 py-3 text-right">
               <button
                 @click="handleDelete(bm.id)"
@@ -153,7 +195,7 @@
               </button>
             </td>
           </tr>
-          <tr v-if="!items.length">
+          <tr v-if="!displayItems.length">
             <td colspan="5" class="px-4 py-16 text-center">
               <Bookmark class="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
               <p class="text-muted-foreground text-sm">No bookmarks yet</p>
@@ -164,7 +206,7 @@
     </div>
 
     <!-- Pagination -->
-    <div class="flex items-center justify-between mt-4">
+    <div v-if="!semanticMode" class="flex items-center justify-between mt-4">
       <p class="text-xs text-muted-foreground">Total: {{ total }}</p>
       <div class="flex gap-1.5">
         <button
@@ -196,10 +238,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { bookmarks } from '@/api'
-import { Search, Plus, Upload, FileDown, Trash2, Bookmark } from 'lucide-vue-next'
+import { bookmarks, recommend } from '@/api'
+import { Search, Plus, Upload, FileDown, Trash2, Bookmark, Sparkles } from 'lucide-vue-next'
 import BookmarkDrawer from '@/components/BookmarkDrawer.vue'
 
 const { t } = useI18n()
@@ -242,6 +284,35 @@ const openDrawer = async (id: number) => {
   }
 }
 const closeDrawer = () => { showDrawer.value = false }
+
+const semanticMode = ref(false)
+const semanticQuery = ref('')
+const semanticLoading = ref(false)
+const semanticResults = ref<any[]>([])
+const semanticError = ref('')
+
+const handleSemanticSearch = async () => {
+  if (!semanticQuery.value.trim()) return
+  semanticLoading.value = true
+  semanticError.value = ''
+  try {
+    const res = await recommend.search(semanticQuery.value, 20)
+    semanticResults.value = res.data || []
+    semanticMode.value = true
+  } catch (e: any) {
+    semanticError.value = e.response?.data?.message || 'Semantic search failed'
+  } finally {
+    semanticLoading.value = false
+  }
+}
+
+const clearSemanticSearch = () => {
+  semanticMode.value = false
+  semanticQuery.value = ''
+  semanticResults.value = []
+}
+
+const displayItems = computed(() => semanticMode.value ? semanticResults.value : items.value)
 
 const load = async () => {
   error.value = ''

@@ -27,6 +27,9 @@
   "bookmarks": {
     "title": "Bookmark Manager",
     "search": "Search bookmarks",
+    "semanticSearch": "Semantic Search",
+    "semanticPlaceholder": "Describe what you're looking for...",
+    "relevance": "Relevance",
     "add": "Add",
     "import": "Import",
     "export": "Export",

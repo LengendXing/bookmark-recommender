@@ -27,6 +27,9 @@
   "bookmarks": {
     "title": "书签管理",
     "search": "搜索书签",
+    "semanticSearch": "智能搜索",
+    "semanticPlaceholder": "输入自然语言描述...",
+    "relevance": "相关度",
     "add": "新增",
     "import": "导入",
     "export": "导出",
