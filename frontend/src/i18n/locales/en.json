@@ -7,6 +7,7 @@
     "bookmarks": "Bookmarks",
     "audit": "Audit Logs",
     "model": "Model Status",
+    "settings": "Settings",
     "logout": "Logout"
   },
   "login": {
@@ -41,7 +42,18 @@
     "tagsHint": "Comma separated",
     "browserSource": "Browser Source",
     "selectBrowser": "Select Browser",
-    "selectFile": "Select File"
+    "selectFile": "Select File",
+    "detail": "Bookmark Detail",
+    "generatedTitle": "AI Generated Title",
+    "generatedDescription": "AI Generated Description",
+    "pageTitle": "Original Page Title",
+    "pageDescription": "Original Page Description",
+    "pageText": "Page Content",
+    "originalData": "Original Page Data",
+    "importInfo": "Import Info",
+    "folderPath": "Browser Folder",
+    "dateAdded": "Date Added",
+    "crawlError": "Crawl Error"
   },
   "common": {
     "cancel": "Cancel",
@@ -59,5 +71,11 @@
     "version": "Version",
     "status": "Status",
     "dataset": "Dataset Size"
+  },
+  "settings": {
+    "title": "System Settings",
+    "apiEndpoint": "AI Model API Endpoint",
+    "apiKey": "API Key",
+    "save": "Save"
   }
 }

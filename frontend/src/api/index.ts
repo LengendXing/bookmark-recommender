@@ -31,6 +31,11 @@ export const recommend = {
   train: (code: string) => request.post('/recommend/train', { code }),
 }
 
+export const settings = {
+  get: () => request.get('/system-config'),
+  update: (data: { api_endpoint?: string; api_key?: string }) => request.put('/system-config', data),
+}
+
 export const admin = {
   stats: () => request.get('/admin/stats'),
   auditLogs: (params: { page?: number; page_size?: number; action?: string } = {}) => request.get('/admin/audit-logs', { params }),

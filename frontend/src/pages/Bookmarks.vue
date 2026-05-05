@@ -134,7 +134,7 @@
           <tr v-for="bm in items" :key="bm.id" class="border-t border-border/50 hover:bg-muted/30 transition-colors">
             <td class="px-4 py-3 text-muted-foreground text-xs">{{ bm.id }}</td>
             <td class="px-4 py-3">
-              <a :href="bm.url" target="_blank" class="font-medium hover:text-accent transition-colors line-clamp-1">{{ bm.title }}</a>
+              <button @click="openDrawer(bm.id)" class="font-medium hover:text-accent transition-colors line-clamp-1 text-left">{{ bm.title }}</button>
               <p class="text-xs text-muted-foreground line-clamp-1 mt-0.5 max-w-xs">{{ bm.description }}</p>
             </td>
             <td class="px-4 py-3 hidden md:table-cell">
@@ -184,6 +184,14 @@
     <div v-if="error" class="mt-4 px-4 py-3 rounded-xl text-sm font-medium" style="background-color: hsl(var(--destructive) / 0.08); color: hsl(var(--destructive))">
       {{ error }}
     </div>
+
+    <!-- Detail Drawer -->
+    <BookmarkDrawer
+      :visible="showDrawer"
+      :loading="drawerLoading"
+      :bookmark="selectedBookmark"
+      @close="closeDrawer"
+    />
   </div>
 </template>
 
@@ -192,6 +200,7 @@ import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { bookmarks } from '@/api'
 import { Search, Plus, Upload, FileDown, Trash2, Bookmark } from 'lucide-vue-next'
+import BookmarkDrawer from '@/components/BookmarkDrawer.vue'
 
 const { t } = useI18n()
 const items = ref<any[]>([])
@@ -214,6 +223,25 @@ const importLoading = ref(false)
 const importError = ref('')
 const importSuccess = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
+
+// Drawer
+const showDrawer = ref(false)
+const drawerLoading = ref(false)
+const selectedBookmark = ref<Record<string, any> | null>(null)
+const openDrawer = async (id: number) => {
+  showDrawer.value = true
+  drawerLoading.value = true
+  selectedBookmark.value = null
+  try {
+    const res = await bookmarks.get(id)
+    selectedBookmark.value = res.data
+  } catch (_) {
+    showDrawer.value = false
+  } finally {
+    drawerLoading.value = false
+  }
+}
+const closeDrawer = () => { showDrawer.value = false }
 
 const load = async () => {
   error.value = ''

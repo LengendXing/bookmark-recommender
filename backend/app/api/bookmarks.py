@@ -1,7 +1,6 @@
 import json
 from datetime import datetime
 
-from bs4 import BeautifulSoup
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
@@ -14,6 +13,7 @@ from app.models.user import User
 from app.schemas import Response, ERROR_BAD_REQUEST, ERROR_NOT_FOUND
 from app.schemas.bookmark import BookmarkCreate, BookmarkOut, BookmarkUpdate
 from app.services.ingest import ingest_bulk, ingest_single
+from app.services.import_service import import_bookmarks_with_ai
 
 router = APIRouter()
 
@@ -138,31 +138,7 @@ def import_bookmarks(
     except Exception:
         raise HTTPException(status_code=400, detail=Response.error(ERROR_BAD_REQUEST, "Cannot read file").model_dump_json())
 
-    soup = BeautifulSoup(content, 'html.parser')
-    links = soup.find_all('a')
-    imported = 0
-    for link in links:
-        url = link.get('href', '').strip()
-        title = link.get_text(strip=True)
-        if not url or not title:
-            continue
-        existing = db.execute(select(Bookmark).where(Bookmark.url == url, Bookmark.user_id == user.id)).scalar_one_or_none()
-        if existing:
-            continue
-        bm = Bookmark(
-            title=title[:512],
-            url=url[:2048],
-            description="",
-            author="",
-            category=f"imported/{browser}" if browser else "imported",
-            tags=json.dumps([], ensure_ascii=False),
-            user_id=user.id,
-        )
-        db.add(bm)
-        imported += 1
-
-    db.add(AuditLog(user_id=user.id, action="import", target_type="bookmark", target_id=0))
-    db.commit()
+    imported = import_bookmarks_with_ai(db, content, browser, user.id)
     return Response.ok(data={"count": imported, "browser": browser})
 
 
@@ -236,4 +212,12 @@ def _to_out(bm: Bookmark, tags: list) -> BookmarkOut:
         user_id=bm.user_id,
         created_at=bm.created_at,
         updated_at=bm.updated_at,
+        folder_path=getattr(bm, 'folder_path', '') or '',
+        date_added=getattr(bm, 'date_added', '') or '',
+        page_title=getattr(bm, 'page_title', '') or '',
+        page_description=getattr(bm, 'page_description', '') or '',
+        page_text=getattr(bm, 'page_text', '') or '',
+        generated_title=getattr(bm, 'generated_title', '') or '',
+        generated_description=getattr(bm, 'generated_description', '') or '',
+        crawl_error=getattr(bm, 'crawl_error', '') or '',
     )

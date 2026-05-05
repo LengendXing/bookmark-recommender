@@ -7,6 +7,7 @@
     "bookmarks": "书签管理",
     "audit": "审计日志",
     "model": "模型状态",
+    "settings": "系统配置",
     "logout": "退出登录"
   },
   "login": {
@@ -41,7 +42,18 @@
     "tagsHint": "用逗号分隔",
     "browserSource": "浏览器来源",
     "selectBrowser": "选择浏览器",
-    "selectFile": "选择文件"
+    "selectFile": "选择文件",
+    "detail": "书签详情",
+    "generatedTitle": "AI 生成标题",
+    "generatedDescription": "AI 生成描述",
+    "pageTitle": "原始页面标题",
+    "pageDescription": "原始页面描述",
+    "pageText": "页面正文",
+    "originalData": "原始页面数据",
+    "importInfo": "导入信息",
+    "folderPath": "浏览器文件夹",
+    "dateAdded": "添加日期",
+    "crawlError": "爬取错误"
   },
   "common": {
     "cancel": "取消",
@@ -59,5 +71,11 @@
     "version": "版本",
     "status": "状态",
     "dataset": "数据量"
+  },
+  "settings": {
+    "title": "系统配置",
+    "apiEndpoint": "AI 模型地址",
+    "apiKey": "API 密钥",
+    "save": "保存"
   }
 }

@@ -36,6 +36,14 @@ class BookmarkOut(BaseModel):
     user_id: int
     created_at: str
     updated_at: str
+    folder_path: str = ""
+    date_added: str = ""
+    page_title: str = ""
+    page_description: str = ""
+    page_text: str = ""
+    generated_title: str = ""
+    generated_description: str = ""
+    crawl_error: str = ""
 
     model_config = {"from_attributes": True}
 

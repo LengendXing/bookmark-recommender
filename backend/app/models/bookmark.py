@@ -1,4 +1,4 @@
-from sqlalchemy import String, Text, Integer, JSON
+from sqlalchemy import String, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, TimestampMixin
@@ -18,3 +18,13 @@ class Bookmark(Base, TimestampMixin):
     rating: Mapped[int] = mapped_column(Integer, default=0)
     metadata_: Mapped[str] = mapped_column("metadata", Text, default="{}")
     user_id: Mapped[int] = mapped_column(Integer, index=True)
+
+    # Extended fields for AI-powered import
+    folder_path: Mapped[str] = mapped_column(String(512), default="")
+    date_added: Mapped[str] = mapped_column(String(64), default="")
+    page_title: Mapped[str] = mapped_column(Text, default="")
+    page_description: Mapped[str] = mapped_column(Text, default="")
+    page_text: Mapped[str] = mapped_column(Text, default="")
+    generated_title: Mapped[str] = mapped_column(Text, default="")
+    generated_description: Mapped[str] = mapped_column(Text, default="")
+    crawl_error: Mapped[str] = mapped_column(Text, default="")

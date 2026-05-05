@@ -14,6 +14,7 @@ const routes = [
   { path: '/bookmarks', name: 'Bookmarks', component: () => import('./pages/Bookmarks.vue'), meta: { requiresAuth: true } },
   { path: '/audit', name: 'Audit', component: () => import('./pages/Audit.vue'), meta: { requiresAuth: true } },
   { path: '/model', name: 'Model', component: () => import('./pages/Model.vue'), meta: { requiresAuth: true } },
+  { path: '/settings', name: 'Settings', component: () => import('./pages/Settings.vue'), meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({ history: createWebHistory(), routes })

@@ -110,6 +110,7 @@ import {
   Bookmark,
   ShieldCheck,
   Cpu,
+  Settings,
   LogOut,
   Sun,
   Moon,
@@ -129,6 +130,7 @@ const navItems = [
   { to: '/bookmarks', icon: Bookmark, label: 'nav.bookmarks' },
   { to: '/audit', icon: ShieldCheck, label: 'nav.audit' },
   { to: '/model', icon: Cpu, label: 'nav.model' },
+  { to: '/settings', icon: Settings, label: 'nav.settings' },
 ]
 
 const isActive = (path: string) => route.path === path
