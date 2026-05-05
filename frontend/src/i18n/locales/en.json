@@ -98,6 +98,17 @@
     "title": "System Settings",
     "apiEndpoint": "AI Model API Endpoint",
     "apiKey": "API Key",
-    "save": "Save"
+    "apiProvider": "API Provider",
+    "providerOpenAI": "OpenAI Compatible",
+    "providerAnthropic": "Claude Proxy (Anthropic)",
+    "model": "Model Name",
+    "save": "Save",
+    "testConnection": "Connection Test",
+    "test": "Test",
+    "selectModel": "Select Model",
+    "testSuccess": "Connection Successful",
+    "testFailed": "Connection Failed",
+    "tokens": "Token Usage",
+    "response": "Model Response"
   }
 }

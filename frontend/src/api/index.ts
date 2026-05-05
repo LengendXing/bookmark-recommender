@@ -41,7 +41,9 @@ export const recommend = {
 
 export const settings = {
   get: () => request.get('/system-config'),
-  update: (data: { api_endpoint?: string; api_key?: string }) => request.put('/system-config', data),
+  update: (data: { api_endpoint?: string; api_key?: string; api_provider?: string; ai_model?: string }) => request.put('/system-config', data),
+  test: (data: { api_endpoint: string; api_key: string; api_provider: string; model: string }) => request.post('/system-config/test', data),
+  listModels: (data: { api_endpoint: string; api_key: string; api_provider: string; model: string }) => request.post('/system-config/models', data),
 }
 
 export const admin = {

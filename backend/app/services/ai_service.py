@@ -2,6 +2,7 @@ import json
 import logging
 from typing import Optional
 
+from anthropic import Anthropic
 from openai import OpenAI
 from sqlalchemy import select
 
@@ -29,20 +30,24 @@ SYSTEM_PROMPT = """你是一个网页内容分析助手。根据提供的网页�
 }"""
 
 
-def _get_client() -> Optional[OpenAI]:
+def _get_config() -> Optional[dict]:
     db = SessionLocal()
     try:
         result = db.execute(select(SystemConfig).where(SystemConfig.key == "api_endpoint")).scalar_one_or_none()
         endpoint = result.value.strip() if result and result.value else None
         result = db.execute(select(SystemConfig).where(SystemConfig.key == "api_key")).scalar_one_or_none()
         api_key = result.value.strip() if result and result.value else None
+        result = db.execute(select(SystemConfig).where(SystemConfig.key == "api_provider")).scalar_one_or_none()
+        provider = result.value.strip() if result and result.value else "openai"
+        result = db.execute(select(SystemConfig).where(SystemConfig.key == "ai_model")).scalar_one_or_none()
+        model = result.value.strip() if result and result.value else "default"
 
         if not endpoint or not api_key:
             return None
 
-        return OpenAI(base_url=endpoint, api_key=api_key, timeout=30)
+        return {"endpoint": endpoint, "api_key": api_key, "provider": provider, "model": model}
     except Exception as e:
-        logger.error(f"Failed to create AI client: {e}")
+        logger.error(f"Failed to read AI config: {e}")
         return None
     finally:
         db.close()
@@ -59,8 +64,14 @@ def analyze_bookmark(
 
     Returns dict with: generated_title, generated_description, tags, category, crawl_error
     """
-    client = _get_client()
-    if not client:
+    user_content = f"""URL: {url}
+书签标题: {bookmark_title}
+网页标题: {page_title}
+网页描述: {page_description}
+网页正文摘要: {page_text[:2000]}"""
+
+    cfg = _get_config()
+    if not cfg:
         return {
             "generated_title": "",
             "generated_description": "",
@@ -69,15 +80,17 @@ def analyze_bookmark(
             "crawl_error": "AI service not configured",
         }
 
-    user_content = f"""URL: {url}
-书签标题: {bookmark_title}
-网页标题: {page_title}
-网页描述: {page_description}
-网页正文摘要: {page_text[:2000]}"""
+    if cfg["provider"] == "anthropic":
+        return _call_anthropic(cfg, user_content)
+    else:
+        return _call_openai(cfg, user_content)
 
+
+def _call_openai(cfg: dict, user_content: str) -> dict:
+    client = OpenAI(base_url=cfg["endpoint"], api_key=cfg["api_key"], timeout=120)
     try:
         response = client.chat.completions.create(
-            model="default",
+            model=cfg["model"],
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_content},
@@ -86,8 +99,45 @@ def analyze_bookmark(
             max_tokens=1024,
         )
         content = response.choices[0].message.content.strip()
+        return _parse_json_response(content)
+    except Exception as e:
+        logger.error(f"OpenAI call failed: {e}")
+        return {
+            "generated_title": "",
+            "generated_description": "",
+            "tags": "",
+            "category": "",
+            "crawl_error": str(e)[:500],
+        }
 
-        # Handle JSON in markdown code blocks
+
+def _call_anthropic(cfg: dict, user_content: str) -> dict:
+    client = Anthropic(api_key=cfg["api_key"], base_url=cfg["endpoint"], timeout=120)
+    try:
+        response = client.messages.create(
+            model=cfg["model"],
+            max_tokens=1024,
+            temperature=0.3,
+            system=SYSTEM_PROMPT,
+            messages=[
+                {"role": "user", "content": user_content},
+            ],
+        )
+        content = "".join(block.text for block in response.content if block.type == "text").strip()
+        return _parse_json_response(content)
+    except Exception as e:
+        logger.error(f"Anthropic call failed: {e}")
+        return {
+            "generated_title": "",
+            "generated_description": "",
+            "tags": "",
+            "category": "",
+            "crawl_error": str(e)[:500],
+        }
+
+
+def _parse_json_response(content: str) -> dict:
+    try:
         if content.startswith("```"):
             content = content.split("```")[1]
             if content.startswith("json"):
@@ -103,20 +153,11 @@ def analyze_bookmark(
             "crawl_error": result.get("crawl_error", ""),
         }
     except json.JSONDecodeError as e:
-        logger.warning(f"AI returned invalid JSON for {url}: {content[:200]}")
+        logger.warning(f"AI returned invalid JSON: {content[:200]}")
         return {
             "generated_title": "",
             "generated_description": "",
             "tags": "",
             "category": "",
             "crawl_error": f"AI response parse error: {str(e)}",
-        }
-    except Exception as e:
-        logger.error(f"AI analysis failed for {url}: {e}")
-        return {
-            "generated_title": "",
-            "generated_description": "",
-            "tags": "",
-            "category": "",
-            "crawl_error": str(e)[:500],
         }

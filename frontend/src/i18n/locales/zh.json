@@ -98,6 +98,17 @@
     "title": "系统配置",
     "apiEndpoint": "AI 模型地址",
     "apiKey": "API 密钥",
-    "save": "保存"
+    "apiProvider": "API 类型",
+    "providerOpenAI": "OpenAI Compatible",
+    "providerAnthropic": "Claude Proxy (Anthropic)",
+    "model": "模型名称",
+    "save": "保存",
+    "testConnection": "连接测试",
+    "test": "测试",
+    "selectModel": "选择模型",
+    "testSuccess": "连接成功",
+    "testFailed": "连接失败",
+    "tokens": "Token 用量",
+    "response": "模型响应"
   }
 }
