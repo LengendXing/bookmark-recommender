@@ -190,6 +190,81 @@
         </div>
       </div>
 
+      <!-- Move to Collection Modal -->
+      <div
+        v-if="showMoveModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+        @click.self="showMoveModal = false"
+      >
+        <div class="rounded-2xl p-6 w-full max-w-xs mx-4 shadow-xl" style="background-color: hsl(var(--card))">
+          <h3 class="text-lg font-semibold mb-4">{{ t('collections.moveTo') }}</h3>
+          <div class="space-y-2 max-h-60 overflow-y-auto">
+            <button
+              @click="handleMoveFromModal(null)"
+              class="w-full text-left px-4 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-3"
+              :class="movingBookmark?.collectionId === null ? 'bg-accent/10 text-accent font-medium' : 'text-muted-foreground hover:bg-muted/50'"
+            >
+              <Folder class="w-4 h-4 flex-shrink-0" />
+              <span>{{ t('collections.noCollection') }}</span>
+            </button>
+            <button
+              v-for="col in collections"
+              :key="col.id"
+              @click="handleMoveFromModal(col.id)"
+              class="w-full text-left px-4 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-3"
+              :class="movingBookmark?.collectionId === col.id ? 'bg-accent/10 text-accent font-medium' : 'text-muted-foreground hover:bg-muted/50'"
+            >
+              <Folder class="w-4 h-4 flex-shrink-0" />
+              <span class="flex-1 truncate">{{ col.name }}</span>
+              <span class="text-xs text-muted-foreground/50">{{ col.bookmark_count }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Bookmark Modal -->
+      <div
+        v-if="showEditModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+        @click.self="showEditModal = false"
+      >
+        <div class="rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl" style="background-color: hsl(var(--card))">
+          <h3 class="text-lg font-semibold mb-4">{{ t('bookmarks.edit') }}</h3>
+          <form @submit.prevent="handleEditSave" class="space-y-4">
+            <div>
+              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.url') }}</label>
+              <input v-model="editForm.url" type="url" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+            </div>
+            <div>
+              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.titleLabel') }}</label>
+              <input v-model="editForm.title" type="text" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+            </div>
+            <div>
+              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.description') }}</label>
+              <input v-model="editForm.description" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.author') }}</label>
+                <input v-model="editForm.author" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+              </div>
+              <div>
+                <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.category') }}</label>
+                <input v-model="editForm.category" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+              </div>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.tags') }}</label>
+              <input v-model="editForm.tagsStr" :placeholder="t('bookmarks.tagsHint')" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+            </div>
+            <div class="flex gap-3 pt-2">
+              <button type="button" @click="showEditModal = false" class="flex-1 py-2 rounded-xl text-sm font-medium border border-border/50 hover:bg-muted transition-colors">{{ t('common.cancel') }}</button>
+              <button type="submit" :disabled="editLoading" class="flex-1 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ editLoading ? '...' : t('common.save') }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <!-- Semantic Search -->
       <div class="flex flex-wrap items-end gap-3 mb-6">
         <div class="flex-1 min-w-0 max-w-xs">
@@ -233,48 +308,66 @@
         <table class="w-full text-sm">
           <thead>
             <tr style="background-color: hsl(var(--muted) / 0.4)">
-              <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase w-12">#</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase">Title</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase" style="width: 4em">#</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase" style="max-width: 8em">Title</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden md:table-cell">{{ t('bookmarks.tags') }}</th>
               <th v-if="semanticMode" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden sm:table-cell w-20">{{ t('bookmarks.relevance') }}</th>
               <th v-else class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden sm:table-cell w-20">Rating</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground tracking-wide uppercase w-40">Actions</th>
+              <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground tracking-wide uppercase w-14"></th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="bm in displayItems" :key="bm.id" class="border-t border-border/50 hover:bg-muted/30 transition-colors">
-              <td class="px-4 py-3 text-muted-foreground text-xs">{{ bm.id }}</td>
+              <td class="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">{{ bm.id }}</td>
               <td class="px-4 py-3">
-                <button @click="openDrawer(bm.id)" class="font-medium hover:text-accent transition-colors line-clamp-1 text-left">{{ bm.title }}</button>
-                <p class="text-xs text-muted-foreground line-clamp-1 mt-0.5 max-w-xs">{{ bm.description }}</p>
+                <button @click="openDrawer(bm.id)" class="font-medium hover:text-accent transition-colors text-left block whitespace-nowrap" :title="bm.title">{{ truncateTitle(bm.title) }}</button>
+                <p class="text-xs text-muted-foreground whitespace-nowrap mt-0.5" :title="bm.description" v-if="bm.description">{{ truncateTitle(bm.description) }}</p>
               </td>
               <td class="px-4 py-3 hidden md:table-cell">
-                <div class="flex flex-wrap gap-1">
-                  <span v-for="tag in (bm.tags || [])" :key="tag" class="inline-block px-2 py-0.5 rounded-lg text-xs font-medium" style="background-color: hsl(var(--accent) / 0.08); color: hsl(var(--accent))">{{ tag }}</span>
+                <div class="flex flex-wrap gap-1 max-w-[160px]">
+                  <span v-for="tag in (bm.tags || [])" :key="tag" class="inline-block px-2 py-0.5 rounded-lg text-xs font-medium truncate max-w-[120px]" style="background-color: hsl(var(--accent) / 0.08); color: hsl(var(--accent))">{{ tag }}</span>
                 </div>
               </td>
               <td v-if="semanticMode" class="px-4 py-3 hidden sm:table-cell">
                 <span class="inline-block px-2 py-0.5 rounded-lg text-xs font-medium" :style="{ backgroundColor: `hsl(var(--accent) / ${(bm.score || 0) * 0.12})`, color: 'hsl(var(--accent))' }">{{ ((bm.score || 0) * 100).toFixed(0) }}%</span>
               </td>
               <td v-else class="px-4 py-3 hidden sm:table-cell font-medium">{{ bm.rating }}</td>
-              <td class="px-4 py-3 text-right">
-                <div class="flex items-center justify-end gap-1">
-                  <select
-                    class="text-xs rounded-lg px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-accent/30"
-                    style="background-color: hsl(var(--muted) / 0.6)"
-                    :value="bm.collection_id ?? ''"
-                    @change="handleMoveBookmark(bm.id, $event)"
-                  >
-                    <option value="">{{ t('collections.moveTo') }}</option>
-                    <option value="__none__">{{ t('collections.noCollection') }}</option>
-                    <option v-for="col in collections" :key="col.id" :value="col.id">{{ col.name }}</option>
-                  </select>
+              <td class="px-4 py-3 text-center relative">
+                <button
+                  data-menu-toggle
+                  @click.stop="toggleMenu(bm.id)"
+                  class="w-7 h-7 inline-flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+                >
+                  <MoreVertical class="w-4 h-4 text-muted-foreground" />
+                </button>
+                <!-- Dropdown Menu -->
+                <div
+                  v-if="openMenuId === bm.id"
+                  data-menu-dropdown
+                  class="absolute right-2 top-full mt-1 z-40 min-w-[140px] rounded-xl py-1.5 shadow-lg border border-border/50"
+                  style="background-color: hsl(var(--card))"
+                  @click.stop
+                >
                   <button
-                    @click="handleDelete(bm.id)"
-                    class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all"
+                    @click="openMoveModal(bm.id, bm.collection_id); openMenuId = null"
+                    class="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors flex items-center gap-2"
+                  >
+                    <Folder class="w-3.5 h-3.5" />
+                    {{ t('collections.moveTo') }}
+                  </button>
+                  <button
+                    @click="openEditBookmark(bm); openMenuId = null"
+                    class="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors flex items-center gap-2"
+                  >
+                    <Pencil class="w-3.5 h-3.5" />
+                    {{ t('bookmarks.edit') }}
+                  </button>
+                  <button
+                    @click="handleDelete(bm.id); openMenuId = null"
+                    class="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:bg-destructive/5 hover:text-destructive transition-colors flex items-center gap-2"
                   >
                     <Trash2 class="w-3.5 h-3.5" />
-                    <span class="hidden sm:inline">{{ t('bookmarks.delete') }}</span>
+                    {{ t('bookmarks.delete') }}
                   </button>
                 </div>
               </td>
@@ -323,10 +416,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { bookmarks, collections as collectionsApi, recommend } from '@/api'
-import { Search, Plus, Upload, FileDown, Trash2, Bookmark, Sparkles, Folder, Pencil } from 'lucide-vue-next'
+import { Search, Plus, Upload, FileDown, Trash2, Bookmark, Sparkles, Folder, Pencil, MoreVertical } from 'lucide-vue-next'
 import BookmarkDrawer from '@/components/BookmarkDrawer.vue'
 
 const { t } = useI18n()
@@ -344,6 +437,70 @@ const showCollectionModal = ref(false)
 const editingCollection = ref<any>(null)
 const collectionLoading = ref(false)
 const collectionForm = ref({ name: '', description: '' })
+
+// Kebab menu
+const openMenuId = ref<number | null>(null)
+
+const toggleMenu = (id: number) => {
+  openMenuId.value = openMenuId.value === id ? null : id
+}
+
+// Move modal
+const showMoveModal = ref(false)
+const movingBookmark = ref<{ id: number; collectionId: number | null } | null>(null)
+
+const openMoveModal = (bookmarkId: number, collectionId: number | null) => {
+  movingBookmark.value = { id: bookmarkId, collectionId }
+  showMoveModal.value = true
+}
+
+const handleMoveFromModal = async (colId: number | null) => {
+  if (!movingBookmark.value) return
+  try {
+    await bookmarks.move(movingBookmark.value.id, colId)
+    showMoveModal.value = false
+    movingBookmark.value = null
+    load()
+    loadCollections()
+  } catch (_) {}
+}
+
+// Edit modal
+const showEditModal = ref(false)
+const editLoading = ref(false)
+const editForm = ref({ id: 0, url: '', title: '', description: '', author: '', category: '', tagsStr: '' })
+
+const openEditBookmark = (bm: any) => {
+  editForm.value = {
+    id: bm.id,
+    url: bm.url || '',
+    title: bm.title || '',
+    description: bm.description || '',
+    author: bm.author || '',
+    category: bm.category || '',
+    tagsStr: (bm.tags || []).join(', '),
+  }
+  showEditModal.value = true
+}
+
+const handleEditSave = async () => {
+  editLoading.value = true
+  try {
+    const tags = editForm.value.tagsStr.split(',').map((s: string) => s.trim()).filter(Boolean)
+    await bookmarks.update(editForm.value.id, {
+      url: editForm.value.url,
+      title: editForm.value.title,
+      description: editForm.value.description || undefined,
+      author: editForm.value.author || undefined,
+      category: editForm.value.category || undefined,
+      tags,
+    })
+    showEditModal.value = false
+    load()
+  } catch (_) {} finally {
+    editLoading.value = false
+  }
+}
 
 const loadCollections = async () => {
   try {
@@ -402,16 +559,17 @@ const handleCollectionDelete = async (colId: number) => {
   } catch (_) {}
 }
 
-const handleMoveBookmark = async (bookmarkId: number, event: Event) => {
-  const target = event.target as HTMLSelectElement
-  const val = target.value
-  if (val === '') return
-  const colId = val === '__none__' ? null : parseInt(val)
-  try {
-    await bookmarks.move(bookmarkId, colId)
-    load()
-    loadCollections()
-  } catch (_) {}
+const truncateTitle = (text: string): string => {
+  if (!text) return ''
+  const hasCJK = /[一-鿿㐀-䶿]/.test(text)
+  if (hasCJK) {
+    return [...text].length <= 6 ? text : [...text].slice(0, 6).join('') + '...'
+  }
+  const words = text.split(/\s+/)
+  if (words.length <= 2) {
+    return text.length <= 25 ? text : text.slice(0, 25) + '...'
+  }
+  return words.slice(0, 2).join(' ') + '...'
 }
 
 // Add modal
@@ -568,6 +726,14 @@ const handleDelete = async (id: number) => {
   } catch (_) {}
 }
 
+const closeMenu = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  if (!target.closest('[data-menu-toggle]') && !target.closest('[data-menu-dropdown]')) {
+    openMenuId.value = null
+  }
+}
+
 watch(searchQuery, () => { page.value = 1; load() })
-onMounted(() => { load(); loadCollections() })
+onMounted(() => { load(); loadCollections(); document.addEventListener('click', closeMenu) })
+onUnmounted(() => { document.removeEventListener('click', closeMenu) })
 </script>
