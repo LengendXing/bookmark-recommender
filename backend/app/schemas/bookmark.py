@@ -57,6 +57,8 @@ class RecommendResult(BaseModel):
     id: int
     title: str
     url: str
+    description: str = ""
+    category: str = ""
     score: float
     tags: list[str]
 

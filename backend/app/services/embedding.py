@@ -3,6 +3,8 @@ import os
 from pathlib import Path
 from typing import Optional
 
+from sqlalchemy import select
+
 import chromadb
 import numpy as np
 from chromadb.config import Settings as ChromaSettings
@@ -12,7 +14,6 @@ from app.core.config import get_settings
 from app.core.database import Session, get_db
 from app.models.bookmark import Bookmark
 from app.models.model_version import ModelVersion
-from sqlalchemy import select
 
 settings = get_settings()
 
@@ -43,6 +44,20 @@ def encode_single(text: str) -> list[float]:
     return encode([text])[0]
 
 
+def _build_doc_text(bm: Bookmark) -> str:
+    tags = json.loads(bm.tags) if isinstance(bm.tags, str) else (bm.tags or [])
+    parts = [
+        bm.title,
+        bm.description,
+        bm.category,
+        " ".join(tags),
+        bm.generated_title or "",
+        bm.generated_description or "",
+        (bm.page_text or "")[:1000],
+    ]
+    return " ".join(filter(None, parts))
+
+
 def train_index():
     """Full re-index: read all bookmarks from SQLite, encode, upsert to ChromaDB."""
     from app.core.database import engine
@@ -64,7 +79,7 @@ def train_index():
     if not bookmarks:
         return
 
-    texts = [f"{bm.title} {bm.description} {bm.category}" for bm in bookmarks]
+    texts = [_build_doc_text(bm) for bm in bookmarks]
     embeddings = encode(texts)
 
     ids = [str(bm.id) for bm in bookmarks]
@@ -72,7 +87,8 @@ def train_index():
         {
             "title": bm.title,
             "url": bm.url,
-            "category": bm.category,
+            "description": bm.description or "",
+            "category": bm.category or "",
             "tags": bm.tags,
             "user_id": bm.user_id,
         }
@@ -85,7 +101,7 @@ def train_index():
     try:
         mv = ModelVersion(
             model_name=_MODEL_NAME,
-            version="0.1.0",
+            version="0.2.0",
             framework="sentence-transformers",
             dataset_size=len(bookmarks),
             status="trained",
@@ -121,6 +137,8 @@ def recommend(query: str, limit: int = 10) -> list[dict]:
             "id": int(doc_id),
             "title": meta.get("title", ""),
             "url": meta.get("url", ""),
+            "description": meta.get("description", ""),
+            "category": meta.get("category", ""),
             "score": round(1 - distance, 4),
             "tags": tags if isinstance(tags, list) else [],
         })
