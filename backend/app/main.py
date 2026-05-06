@@ -58,7 +58,7 @@ async def _daily_recommendations():
                         }
                         t = threading.Thread(
                             target=_run_recommendation,
-                            args=(account.user_id, account.token, 3),
+                            args=(account.user_id, 3),
                             daemon=True,
                         )
                         t.start()

@@ -300,8 +300,8 @@ def export_repos(
 
 # ── AI Analysis ─────────────────────────────────────────────────────────────────
 
-def _run_analysis(user_id: int, account_token: str):
-    """Background: fetch repo detail + README from GitHub, analyze with AI, update DB."""
+def _run_analysis(user_id: int):
+    """Background: fetch repo detail + README from GitHub (public API, no auth), analyze with AI, update DB."""
     task = _analysis_progress.get(user_id)
     if not task:
         return
@@ -332,9 +332,9 @@ def _run_analysis(user_id: int, account_token: str):
 
             try:
                 # Fetch detail from GitHub
-                detail = get_repo_detail(account_token, repo.repo_full_name)
+                detail = get_repo_detail(repo.repo_full_name)
                 # Fetch README
-                readme = get_repo_readme(account_token, repo.repo_full_name, max_chars=3000)
+                readme = get_repo_readme(repo.repo_full_name, max_chars=3000)
 
                 # AI analysis
                 ai = analyze_repo(
@@ -429,7 +429,7 @@ def analyze_all_repos(
 
     thread = threading.Thread(
         target=_run_analysis,
-        args=(user.id, account.token),
+        args=(user.id,),
         daemon=True,
     )
     thread.start()
@@ -450,8 +450,8 @@ def analyze_progress(
 
 # ── Recommendations ────────────────────────────────────────────────────────────
 
-def _run_recommendation(user_id: int, account_token: str, top_k_tags: int):
-    """Background: extract user's tag profile, search GitHub, score, store recommendations."""
+def _run_recommendation(user_id: int, top_k_tags: int):
+    """Background: extract user's tag profile, search public GitHub, score, store recommendations."""
     task = _recommendation_progress.get(user_id)
     if not task:
         return
@@ -525,7 +525,7 @@ def _run_recommendation(user_id: int, account_token: str, top_k_tags: int):
 
             # Step 2: Search GitHub for repos matching this tag
             try:
-                search_results = search_repos_by_topic(account_token, tag, per_page=10)
+                search_results = search_repos_by_topic(tag, per_page=10)
             except GitHubServiceError as e:
                 task["message"] = f"Search failed for tag {tag}: {e}"
                 continue
@@ -541,7 +541,7 @@ def _run_recommendation(user_id: int, account_token: str, top_k_tags: int):
 
                 # Enrich with full repo detail
                 try:
-                    detail = get_repo_detail(account_token, full_name)
+                    detail = get_repo_detail(full_name)
                 except GitHubServiceError:
                     detail = sr
 
@@ -650,7 +650,7 @@ def generate_recommendations(
 
     thread = threading.Thread(
         target=_run_recommendation,
-        args=(user.id, account.token, top_k_tags),
+        args=(user.id, top_k_tags),
         daemon=True,
     )
     thread.start()

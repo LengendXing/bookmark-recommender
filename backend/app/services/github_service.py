@@ -11,7 +11,8 @@ class GitHubServiceError(Exception):
     pass
 
 
-def _headers(token: str) -> dict:
+def _auth_headers(token: str) -> dict:
+    """Headers with authentication — for user-specific operations only."""
     return {
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github.v3+json",
@@ -19,9 +20,17 @@ def _headers(token: str) -> dict:
     }
 
 
+def _public_headers() -> dict:
+    """Headers without authentication — for public read-only API calls."""
+    return {
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "BookmarkRecommender/1.0",
+    }
+
+
 def get_user_info(token: str) -> dict:
     """Validate token and return authenticated user info."""
-    r = requests.get(f"{GITHUB_API}/user", headers=_headers(token), timeout=15)
+    r = requests.get(f"{GITHUB_API}/user", headers=_auth_headers(token), timeout=15)
     if r.status_code == 401:
         raise GitHubServiceError("Invalid GitHub token")
     if r.status_code != 200:
@@ -38,7 +47,7 @@ def list_starred_repos(token: str, page: int = 1, per_page: int = 100) -> tuple[
     params = {"page": page, "per_page": min(per_page, 100)}
     r = requests.get(
         f"{GITHUB_API}/user/starred",
-        headers=_headers(token),
+        headers=_auth_headers(token),
         params=params,
         timeout=30,
     )
@@ -70,11 +79,11 @@ def list_starred_repos(token: str, page: int = 1, per_page: int = 100) -> tuple[
     return repos, next_link
 
 
-def get_repo_detail(token: str, repo_full_name: str) -> dict:
-    """Get detailed repository information including topics, license, homepage etc."""
+def get_repo_detail(repo_full_name: str) -> dict:
+    """Get public repository information (no auth needed)."""
     r = requests.get(
         f"{GITHUB_API}/repos/{repo_full_name}",
-        headers=_headers(token),
+        headers=_public_headers(),
         timeout=15,
     )
     if r.status_code != 200:
@@ -102,12 +111,12 @@ def get_repo_detail(token: str, repo_full_name: str) -> dict:
     }
 
 
-def get_repo_readme(token: str, repo_full_name: str, max_chars: int = 3000) -> str:
-    """Get the README content for a repository. Returns decoded text, truncated to max_chars."""
+def get_repo_readme(repo_full_name: str, max_chars: int = 3000) -> str:
+    """Get the README content for a public repository (no auth needed)."""
     try:
         r = requests.get(
             f"{GITHUB_API}/repos/{repo_full_name}/readme",
-            headers=_headers(token),
+            headers=_public_headers(),
             timeout=15,
         )
         if r.status_code != 200:
@@ -121,13 +130,8 @@ def get_repo_readme(token: str, repo_full_name: str, max_chars: int = 3000) -> s
         return ""
 
 
-def search_repos_by_topic(token: str, topic: str, per_page: int = 10, page: int = 1) -> list[dict]:
-    """Search GitHub repositories by topic, sorted by stars.
-
-    GitHub Search API 限制: 认证用户 30 req/min, 未认证 10 req/min.
-    每个标签只请求 1 页 (per_page=10) 以控制调用频率.
-    如需扩大搜索范围，调用方需自行添加 sleep 间隔或调整并发数.
-    """
+def search_repos_by_topic(topic: str, per_page: int = 10, page: int = 1) -> list[dict]:
+    """Search public GitHub repositories by topic (no auth, 10 req/min rate limit)."""
     params = {
         "q": f"topic:{topic}",
         "sort": "stars",
@@ -137,7 +141,7 @@ def search_repos_by_topic(token: str, topic: str, per_page: int = 10, page: int 
     }
     r = requests.get(
         f"{GITHUB_API}/search/repositories",
-        headers=_headers(token),
+        headers=_public_headers(),
         params=params,
         timeout=30,
     )
@@ -182,7 +186,7 @@ def star_repo(token: str, repo_full_name: str) -> None:
     """Star a repository."""
     r = requests.put(
         f"{GITHUB_API}/user/starred/{repo_full_name}",
-        headers=_headers(token),
+        headers=_auth_headers(token),
         timeout=15,
     )
     if r.status_code not in (204, 304):
@@ -193,7 +197,7 @@ def unstar_repo(token: str, repo_full_name: str) -> None:
     """Unstar a repository."""
     r = requests.delete(
         f"{GITHUB_API}/user/starred/{repo_full_name}",
-        headers=_headers(token),
+        headers=_auth_headers(token),
         timeout=15,
     )
     if r.status_code not in (204, 304):
