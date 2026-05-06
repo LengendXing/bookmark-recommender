@@ -66,7 +66,15 @@
     "dateAdded": "Date Added",
     "crawlError": "Crawl Error",
     "moveToCollection": "Move to",
-    "analyzeAll": "AI Analyze All"
+    "analyzeAll": "AI Analyze All",
+    "batchDelete": "Batch Delete",
+    "batchDeleteConfirm": "Are you sure you want to delete {count} selected bookmarks? This cannot be undone.",
+    "batchMove": "Batch Move",
+    "batchMoveTo": "Move to Collection",
+    "batchRemoveFromCollection": "Remove from Collection",
+    "selectAll": "Select All",
+    "selected": "{count} selected",
+    "clearSelection": "Clear Selection"
   },
   "collections": {
     "title": "Collections",

@@ -15,7 +15,7 @@ from app.models.collection import Collection
 from app.models.system_config import SystemConfig
 from app.models.user import User
 from app.schemas import Response, ERROR_BAD_REQUEST, ERROR_NOT_FOUND, ERROR_PERMISSION_DENIED
-from app.schemas.bookmark import BookmarkCreate, BookmarkMove, BookmarkOut, BookmarkUpdate
+from app.schemas.bookmark import BatchDeleteRequest, BatchMoveRequest, BookmarkCreate, BookmarkMove, BookmarkOut, BookmarkUpdate
 from app.services.ingest import ingest_bulk, ingest_single
 from app.services.ai_service import analyze_bookmark
 from app.services.import_service import import_bookmarks_with_ai
@@ -381,6 +381,71 @@ def rotate_push_token():
         return Response.ok(data={"token": new_token})
     finally:
         db.close()
+
+
+@router.post("/batch-delete", response_model=Response)
+def batch_delete_bookmarks(
+    body: BatchDeleteRequest,
+    db = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Delete multiple bookmarks. All must belong to the current user."""
+    ids = body.ids
+    to_delete = []
+    for bid in ids:
+        result = db.execute(
+            select(Bookmark).where(Bookmark.id == bid, Bookmark.user_id == user.id)
+        ).scalar_one_or_none()
+        if result is None:
+            raise HTTPException(
+                status_code=404,
+                detail=Response.error(ERROR_NOT_FOUND, f"Bookmark {bid} not found").model_dump_json(),
+            )
+        to_delete.append(result)
+
+    for bm in to_delete:
+        db.delete(bm)
+        db.add(AuditLog(user_id=user.id, action="delete", target_type="bookmark", target_id=bm.id))
+    db.commit()
+    return Response.ok(data={"deleted": len(to_delete)})
+
+
+@router.post("/batch-move", response_model=Response)
+def batch_move_bookmarks(
+    body: BatchMoveRequest,
+    db = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Move multiple bookmarks to a collection. All bookmarks must belong to the current user."""
+    ids = body.ids
+    collection_id = body.collection_id
+
+    if collection_id is not None:
+        col = db.execute(
+            select(Collection).where(Collection.id == collection_id, Collection.user_id == user.id)
+        ).scalar_one_or_none()
+        if col is None:
+            raise HTTPException(
+                status_code=400,
+                detail=Response.error(ERROR_BAD_REQUEST, "Collection not found").model_dump_json(),
+            )
+
+    to_move = []
+    for bid in ids:
+        result = db.execute(
+            select(Bookmark).where(Bookmark.id == bid, Bookmark.user_id == user.id)
+        ).scalar_one_or_none()
+        if result is None:
+            raise HTTPException(
+                status_code=404,
+                detail=Response.error(ERROR_NOT_FOUND, f"Bookmark {bid} not found").model_dump_json(),
+            )
+        to_move.append(result)
+
+    for bm in to_move:
+        bm.collection_id = collection_id
+    db.commit()
+    return Response.ok(data={"moved": len(to_move), "collection_id": collection_id})
 
 
 @router.get("/{bookmark_id}", response_model=Response)
