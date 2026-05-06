@@ -49,77 +49,109 @@
         ]"
       >{{ notify.msg }}</div>
 
+      <!-- Tab bar -->
+      <div v-if="activeAccountId" class="flex items-center border-b border-border/40">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          @click="switchTab(tab.key)"
+          :class="[
+            'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px',
+            activeTab === tab.key
+              ? 'border-accent text-accent'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          ]"
+        >{{ tab.label }}</button>
+        <div class="flex-1" />
+        <!-- AI buttons (shown only on Starred tab) -->
+        <template v-if="activeTab === 'starred'">
+          <button
+            @click="doRecommend"
+            :disabled="recommendRunning"
+            class="h-8 px-3 mr-2 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted transition-colors disabled:opacity-50"
+          >{{ recommendRunning ? '...' : $t('github.recommend') }}</button>
+          <button
+            @click="doAnalyze"
+            :disabled="analyzeRunning"
+            class="h-8 px-3 mr-3 text-xs font-medium rounded-lg bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+          >{{ analyzeRunning ? '...' : $t('github.analyze') }}</button>
+        </template>
+      </div>
+
       <!-- Toolbar -->
       <div class="flex items-center gap-2 px-5 py-3 border-b border-border/40 flex-wrap">
-        <!-- Search mode -->
-        <select v-model="searchMode" class="h-8 px-2 text-xs rounded-lg border border-input bg-card">
-          <option value="normal">{{ $t('github.searchNormal') }}</option>
-          <option value="semantic">{{ $t('github.searchSemantic') }}</option>
-        </select>
+        <!-- Starred tab toolbar -->
+        <template v-if="activeTab === 'starred'">
+          <select v-model="searchMode" class="h-8 px-2 text-xs rounded-lg border border-input bg-card">
+            <option value="normal">{{ $t('github.searchNormal') }}</option>
+            <option value="semantic">{{ $t('github.searchSemantic') }}</option>
+          </select>
 
-        <!-- Search input -->
-        <input
-          v-model="searchQuery"
-          :placeholder="searchMode === 'semantic' ? $t('github.semanticSearchPlaceholder') : $t('github.searchPlaceholder')"
-          class="h-8 px-3 text-sm rounded-lg border border-input bg-card focus:outline-none focus:ring-1 focus:ring-ring flex-1 min-w-[160px]"
-          @keyup.enter="doSearch"
-        />
+          <input
+            v-model="searchQuery"
+            :placeholder="searchMode === 'semantic' ? $t('github.semanticSearchPlaceholder') : $t('github.searchPlaceholder')"
+            class="h-8 px-3 text-sm rounded-lg border border-input bg-card focus:outline-none focus:ring-1 focus:ring-ring flex-1 min-w-[160px]"
+            @keyup.enter="doSearch"
+          />
 
-        <button
-          @click="doSearch"
-          class="h-8 px-3 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted transition-colors"
-        >{{ searchMode === 'semantic' ? $t('github.searchSemantic') : $t('github.searchNormal') }}</button>
+          <button
+            @click="doSearch"
+            class="h-8 px-3 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted transition-colors"
+          >{{ searchMode === 'semantic' ? $t('github.searchSemantic') : $t('github.searchNormal') }}</button>
 
-        <div class="flex-1" />
+          <div class="flex-1" />
 
-        <!-- Sync button -->
-        <button
-          v-if="activeAccountId"
-          @click="syncAccount"
-          :disabled="syncing"
-          class="h-8 px-3 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted transition-colors"
-        >{{ syncing ? '...' : $t('github.sync') }}</button>
+          <button
+            @click="syncAccount"
+            :disabled="syncing"
+            class="h-8 px-3 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted transition-colors"
+          >{{ syncing ? '...' : $t('github.sync') }}</button>
 
-        <!-- Import -->
-        <button
-          @click="triggerImport"
-          class="h-8 px-3 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted transition-colors"
-        >{{ $t('github.import') }}</button>
-        <input ref="importInput" type="file" accept=".json" class="hidden" @change="handleImportFile" />
+          <button
+            @click="triggerImport"
+            class="h-8 px-3 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted transition-colors"
+          >{{ $t('github.import') }}</button>
+          <input ref="importInput" type="file" accept=".json" class="hidden" @change="handleImportFile" />
 
-        <!-- Export -->
-        <button
-          @click="doExport"
-          class="h-8 px-3 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted transition-colors"
-        >{{ $t('github.export') }}</button>
+          <button
+            @click="doExport"
+            class="h-8 px-3 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted transition-colors"
+          >{{ $t('github.export') }}</button>
+        </template>
 
-        <!-- AI Analyze (placeholder) -->
-        <button
-          @click="placeholderAnalyze"
-          class="h-8 px-3 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted transition-colors"
-        >{{ $t('github.analyze') }}</button>
+        <!-- Recommended tab toolbar (search only) -->
+        <template v-else>
+          <input
+            v-model="recSearch"
+            placeholder="Search recommendations..."
+            class="h-8 px-3 text-sm rounded-lg border border-input bg-card focus:outline-none focus:ring-1 focus:ring-ring flex-1 min-w-[160px]"
+            @keyup.enter="loadRecommendations"
+          />
+          <button
+            @click="loadRecommendations"
+            class="h-8 px-3 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted transition-colors"
+          >Search</button>
+        </template>
       </div>
 
       <!-- Table -->
       <div class="flex-1 overflow-auto">
-        <!-- Skeleton loading -->
         <SkeletonTable v-if="!loaded && listLoading" :rows="5" />
         <div v-else-if="!loaded && !listLoading" class="flex items-center justify-center h-32 text-muted-foreground text-sm">
           {{ $t('github.noAccounts') }}
         </div>
 
-        <template v-else>
+        <!-- Starred repos table -->
+        <template v-else-if="activeTab === 'starred'">
           <table v-if="repos.length > 0" class="w-full">
             <thead>
               <tr class="border-b border-border/40 bg-muted/30">
                 <th class="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground w-10">#</th>
                 <th class="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">{{ $t('github.name') }}</th>
-                <th class="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">{{ $t('github.owner') }}</th>
                 <th class="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground hidden md:table-cell">{{ $t('github.description') }}</th>
                 <th class="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">{{ $t('github.language') }}</th>
+                <th class="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground hidden lg:table-cell">{{ $t('github.aiAnalysis') }}</th>
                 <th class="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground">{{ $t('github.stars') }}</th>
-                <th class="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground">{{ $t('github.forks') }}</th>
-                <th v-if="searchMode === 'semantic'" class="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground">Score</th>
                 <th class="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground w-16">-</th>
               </tr>
             </thead>
@@ -131,11 +163,12 @@
               >
                 <td class="px-4 py-2.5 text-xs text-muted-foreground">{{ (page - 1) * pageSize + idx + 1 }}</td>
                 <td class="px-4 py-2.5 text-sm">
-                  <a :href="`https://github.com/${repo.repo_full_name}`" target="_blank" class="text-accent hover:underline">
-                    {{ truncateTitle(repo.repo_name) }}
-                  </a>
+                  <button
+                    @click="openDrawer(repo.id)"
+                    class="text-accent hover:underline text-left"
+                  >{{ truncateTitle(repo.repo_name) }}</button>
+                  <div class="text-[10px] text-muted-foreground">{{ repo.owner }}</div>
                 </td>
-                <td class="px-4 py-2.5 text-sm text-muted-foreground">{{ repo.owner }}</td>
                 <td class="px-4 py-2.5 text-sm text-muted-foreground hidden md:table-cell max-w-[200px] truncate" :title="repo.description">
                   {{ repo.description || '-' }}
                 </td>
@@ -143,11 +176,11 @@
                   <span v-if="repo.language" class="px-1.5 py-0.5 rounded bg-muted/50">{{ repo.language }}</span>
                   <span v-else class="text-muted-foreground">-</span>
                 </td>
-                <td class="px-4 py-2.5 text-sm text-right">{{ repo.stars.toLocaleString() }}</td>
-                <td class="px-4 py-2.5 text-sm text-right">{{ repo.forks.toLocaleString() }}</td>
-                <td v-if="searchMode === 'semantic'" class="px-4 py-2.5 text-sm text-right text-accent">
-                  {{ repo._score }}%
+                <td class="px-4 py-2.5 text-xs hidden lg:table-cell">
+                  <span v-if="repo.ai_summary" class="text-accent/80" :title="repo.ai_summary">{{ truncateSummary(repo.ai_summary) }}</span>
+                  <span v-else class="text-muted-foreground/50 text-[11px]">{{ $t('github.notAnalyzed') }}</span>
                 </td>
+                <td class="px-4 py-2.5 text-sm text-right">{{ repo.stars.toLocaleString() }}</td>
                 <td class="px-4 py-2.5 text-right">
                   <button
                     @click="confirmDeleteRepo(repo)"
@@ -162,10 +195,60 @@
             {{ $t('github.noRepos') }}
           </div>
         </template>
+
+        <!-- Recommended repos table -->
+        <template v-else>
+          <table v-if="recommendations.length > 0" class="w-full">
+            <thead>
+              <tr class="border-b border-border/40 bg-muted/30">
+                <th class="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground w-10">#</th>
+                <th class="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">{{ $t('github.name') }}</th>
+                <th class="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground hidden md:table-cell">{{ $t('github.aiSummary') }}</th>
+                <th class="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground hidden lg:table-cell">{{ $t('github.aiTags') }}</th>
+                <th class="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground">{{ $t('github.stars') }}</th>
+                <th class="text-right px-4 py-2.5 text-xs font-medium text-muted-foreground">{{ $t('github.score') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(rec, idx) in recommendations"
+                :key="rec.id"
+                :class="[
+                  'border-b border-border/20 hover:bg-muted/20 transition-colors',
+                  !rec.is_read ? 'bg-accent/5' : ''
+                ]"
+              >
+                <td class="px-4 py-2.5 text-xs text-muted-foreground">{{ (recPage - 1) * recPageSize + idx + 1 }}</td>
+                <td class="px-4 py-2.5 text-sm">
+                  <a
+                    :href="`https://github.com/${rec.repo_full_name}`"
+                    target="_blank"
+                    class="text-accent hover:underline"
+                  >{{ truncateTitle(rec.repo_name) }}</a>
+                  <div class="text-[10px] text-muted-foreground">{{ rec.owner }}</div>
+                </td>
+                <td class="px-4 py-2.5 text-sm text-muted-foreground hidden md:table-cell max-w-[220px] truncate" :title="rec.ai_summary">
+                  {{ rec.ai_summary || rec.description || '-' }}
+                </td>
+                <td class="px-4 py-2.5 text-xs hidden lg:table-cell">
+                  <div class="flex flex-wrap gap-1 max-w-[200px]">
+                    <span v-for="t in recTagList(rec)" :key="t" class="px-1.5 py-0.5 text-[10px] rounded bg-muted/50">{{ t }}</span>
+                  </div>
+                </td>
+                <td class="px-4 py-2.5 text-sm text-right">{{ rec.stars.toLocaleString() }}</td>
+                <td class="px-4 py-2.5 text-sm text-right text-accent font-medium">{{ rec.score.toFixed(1) }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div v-else class="flex items-center justify-center h-32 text-muted-foreground text-sm">
+            {{ $t('github.noRecommendations') }}
+          </div>
+        </template>
       </div>
 
-      <!-- Pagination -->
-      <div v-if="repos.length > 0 && searchMode !== 'semantic'" class="flex items-center justify-between px-5 py-3 border-t border-border/40 gap-3 flex-wrap">
+      <!-- Pagination - Starred -->
+      <div v-if="activeTab === 'starred' && repos.length > 0 && searchMode !== 'semantic'" class="flex items-center justify-between px-5 py-3 border-t border-border/40 gap-3 flex-wrap">
         <div class="flex items-center gap-1.5">
           <label class="text-xs text-muted-foreground">{{ $t('pagination.perPage') }}</label>
           <select v-model="pageSize" class="h-8 px-2 text-xs rounded-lg border border-input bg-card">
@@ -186,6 +269,25 @@
           <button @click="page++" :disabled="page >= totalPages" class="h-8 px-3 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted disabled:opacity-40">{{ $t('pagination.next') }}</button>
         </div>
       </div>
+
+      <!-- Pagination - Recommended -->
+      <div v-if="activeTab === 'recommended' && recommendations.length > 0" class="flex items-center justify-between px-5 py-3 border-t border-border/40 gap-3 flex-wrap">
+        <div class="flex items-center gap-1.5">
+          <label class="text-xs text-muted-foreground">{{ $t('pagination.perPage') }}</label>
+          <select v-model="recPageSize" class="h-8 px-2 text-xs rounded-lg border border-input bg-card">
+            <option v-for="n in [10, 20, 50]" :key="n" :value="n">{{ n }}</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-muted-foreground">Page {{ recPage }} / {{ recTotalPages || 1 }}</span>
+        </div>
+
+        <div class="flex gap-1.5">
+          <button @click="recPage--" :disabled="recPage <= 1" class="h-8 px-3 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted disabled:opacity-40">{{ $t('pagination.prev') }}</button>
+          <button @click="recPage++" :disabled="recPage >= recTotalPages" class="h-8 px-3 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted disabled:opacity-40">{{ $t('pagination.next') }}</button>
+        </div>
+      </div>
     </main>
 
     <!-- Add Account Modal -->
@@ -195,14 +297,13 @@
         class="fixed inset-0 z-50 flex items-center justify-center"
         @click.self="showAddModal = false"
       >
-        <div class="fixed inset-0 bg-black/40" />
+        <div class="fixed inset-0 bg-black/60" />
         <div class="relative z-10 bg-card rounded-xl border border-border shadow-2xl w-[420px] max-h-[80vh] overflow-auto">
           <div class="flex items-center justify-between px-5 py-3">
             <h3 class="font-semibold text-sm">{{ $t('github.addAccountTitle') }}</h3>
             <button @click="showAddModal = false" class="w-6 h-6 flex items-center justify-center rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">&times;</button>
           </div>
 
-          <!-- Tabs -->
           <div class="flex gap-1 px-5 pt-4 pb-0">
             <button
               @click="addTab = 'oauth'"
@@ -220,17 +321,15 @@
             >{{ $t('github.tokenTab') }}</button>
           </div>
 
-          <!-- OAuth tab -->
           <div v-if="addTab === 'oauth'" class="p-5">
             <p class="text-sm text-muted-foreground mb-4">
-              OAuth requires a GitHub OAuth App configuration. Please use the Personal Token tab to add an account instead, or configure the OAuth App in the system settings.
+              OAuth requires a GitHub OAuth App configuration. Please use the Personal Token tab to add an account instead.
             </p>
             <div class="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground">
               To create a Personal Access Token, go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic). Select <code class="text-foreground">repo</code> and <code class="text-foreground">user:starred</code> scopes.
             </div>
           </div>
 
-          <!-- Token tab -->
           <div v-if="addTab === 'token'" class="p-5 space-y-4">
             <div>
               <label class="block text-sm font-medium mb-1.5">{{ $t('github.tokenLabel') }}</label>
@@ -259,7 +358,7 @@
         class="fixed inset-0 z-50 flex items-center justify-center"
         @click.self="deleteAccountTarget = null"
       >
-        <div class="fixed inset-0 bg-black/40" />
+        <div class="fixed inset-0 bg-black/60" />
         <div class="relative z-10 bg-card rounded-xl border border-border shadow-2xl w-80 p-5">
           <p class="text-sm mb-4">{{ $t('github.deleteAccountConfirm', { name: deleteAccountTarget.github_login }) }}</p>
           <p class="text-xs text-muted-foreground mb-4">{{ $t('github.deleteAccountHint') }}</p>
@@ -278,7 +377,7 @@
         class="fixed inset-0 z-50 flex items-center justify-center"
         @click.self="deleteRepo = null"
       >
-        <div class="fixed inset-0 bg-black/40" />
+        <div class="fixed inset-0 bg-black/60" />
         <div class="relative z-10 bg-card rounded-xl border border-border shadow-2xl w-80 p-5">
           <p class="text-sm mb-4">{{ $t('github.deleteRepoConfirm') }}</p>
           <div class="flex justify-end gap-2">
@@ -288,18 +387,71 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Progress modal -->
+    <Teleport to="body">
+      <div
+        v-if="progress.show"
+        class="fixed inset-0 z-50 flex items-center justify-center"
+      >
+        <div class="fixed inset-0 bg-black/50" />
+        <div class="relative z-10 bg-card rounded-xl border border-border shadow-2xl w-[400px] max-w-[90vw] p-6">
+          <h3 class="font-semibold text-sm mb-4">{{ progress.title }}</h3>
+          <!-- Progress bar -->
+          <div class="w-full bg-muted rounded-full h-2 mb-3 overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all duration-300"
+              :class="progress.done ? 'bg-green-500' : 'bg-accent'"
+              :style="{ width: progress.pct + '%' }"
+            />
+          </div>
+          <p class="text-sm text-muted-foreground mb-1">{{ progress.msg }}</p>
+          <p v-if="progress.sub" class="text-xs text-muted-foreground/70 mb-3">{{ progress.sub }}</p>
+          <div v-if="progress.done" class="text-xs text-green-600 mb-3">{{ progress.doneMsg }}</div>
+          <button
+            v-if="progress.done"
+            @click="progress.show = false"
+            class="w-full h-9 text-sm font-medium rounded-lg bg-accent text-accent-foreground hover:opacity-90"
+          >{{ $t('common.cancel') }}</button>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Repo Detail Drawer -->
+    <RepoDetailDrawer
+      :open="drawerOpen"
+      :repo-id="drawerRepoId"
+      @close="drawerOpen = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { github } from '@/api'
 import SkeletonTable from '@/components/SkeletonTable.vue'
+import RepoDetailDrawer from '@/components/RepoDetailDrawer.vue'
 
 const { t } = useI18n()
 
-// ── Sidebar accounts ─────────────────────────────────────────────────────────
+// ── Tabs ────────────────────────────────────────────────────────────────────────
+const tabs = [
+  { key: 'starred', label: t('github.starred') },
+  { key: 'recommended', label: t('github.recommended') },
+]
+const activeTab = ref('starred')
+
+const switchTab = (key: string) => {
+  activeTab.value = key
+  if (key === 'starred') {
+    loadRepos()
+  } else {
+    loadRecommendations()
+  }
+}
+
+// ── Sidebar accounts ─────────────────────────────────────────────────────────────
 const accounts = ref<any[]>([])
 const activeAccountId = ref<number | null>(null)
 
@@ -319,6 +471,7 @@ const loadAccounts = async () => {
 
 const selectAccount = (id: number) => {
   activeAccountId.value = id
+  activeTab.value = 'starred'
   page.value = 1
   searchMode.value = 'normal'
   searchQuery.value = ''
@@ -377,7 +530,7 @@ const doDeleteAccount = async () => {
   } catch { /* ignore */ }
 }
 
-// ── Repo list ─────────────────────────────────────────────────────────────────
+// ── Starred repos ────────────────────────────────────────────────────────────────
 const repos = ref<any[]>([])
 const total = ref(0)
 const page = ref(1)
@@ -443,10 +596,11 @@ const doSemanticSearch = async () => {
   listLoading.value = false
 }
 
-const syncRepos = async (accountId: number) => {
+const syncAccount = async () => {
+  if (!activeAccountId.value || syncing.value) return
   syncing.value = true
   try {
-    const res: any = await github.syncAccount(accountId)
+    const res: any = await github.syncAccount(activeAccountId.value)
     notify.value = { type: 'success', msg: t('github.syncSuccess', { count: res.data?.imported || 0 }) }
     await loadRepos()
   } catch (e: any) {
@@ -462,12 +616,131 @@ const syncRepos = async (accountId: number) => {
   syncing.value = false
 }
 
-const syncAccount = async () => {
-  if (!activeAccountId.value || syncing.value) return
-  await syncRepos(activeAccountId.value)
+// ── AI Analyze ───────────────────────────────────────────────────────────────────
+const analyzeRunning = ref(false)
+let analyzeTimer: ReturnType<typeof setInterval> | null = null
+
+const doAnalyze = async () => {
+  if (analyzeRunning.value) return
+  analyzeRunning.value = true
+  progress.value = { show: true, title: t('github.analyzing'), msg: 'Starting...', sub: '', pct: 0, done: false, doneMsg: '' }
+  try {
+    await github.analyzeAll()
+    analyzeTimer = setInterval(pollAnalyzeProgress, 1500)
+  } catch (e: any) {
+    const detail = e?.response?.data?.detail
+    notify.value = { type: 'error', msg: typeof detail === 'string' ? detail : 'Analysis failed' }
+    analyzeRunning.value = false
+    progress.value.show = false
+  }
 }
 
-// ── Import / Export ───────────────────────────────────────────────────────────
+const pollAnalyzeProgress = async () => {
+  try {
+    const res: any = await github.analyzeProgress()
+    const d = res.data
+    const pct = d.total > 0 ? Math.round((d.current / d.total) * 100) : 0
+    progress.value = {
+      show: true,
+      title: t('github.analyzing'),
+      msg: `${t('github.analyzeProgress', { current: d.current, total: d.total })}`,
+      sub: d.message || '',
+      pct,
+      done: d.status === 'done',
+      doneMsg: d.status === 'done' ? t('github.analyzeComplete', { count: d.total }) : '',
+    }
+    if (d.status === 'done') {
+      if (analyzeTimer) { clearInterval(analyzeTimer); analyzeTimer = null }
+      analyzeRunning.value = false
+      loadRepos()
+    }
+  } catch {
+    if (analyzeTimer) { clearInterval(analyzeTimer); analyzeTimer = null }
+    analyzeRunning.value = false
+    progress.value.show = false
+  }
+}
+
+// ── AI Recommend ─────────────────────────────────────────────────────────────────
+const recommendRunning = ref(false)
+let recommendTimer: ReturnType<typeof setInterval> | null = null
+
+const doRecommend = async () => {
+  if (recommendRunning.value) return
+  recommendRunning.value = true
+  progress.value = { show: true, title: t('github.recommending'), msg: 'Starting...', sub: '', pct: 0, done: false, doneMsg: '' }
+  try {
+    await github.generateRecommendations({ top_k_tags: 3 })
+    recommendTimer = setInterval(pollRecommendProgress, 1500)
+  } catch (e: any) {
+    const detail = e?.response?.data?.detail
+    notify.value = { type: 'error', msg: typeof detail === 'string' ? detail : 'Recommendation failed' }
+    recommendRunning.value = false
+    progress.value.show = false
+  }
+}
+
+const pollRecommendProgress = async () => {
+  try {
+    const res: any = await github.recommendationsProgress()
+    const d = res.data
+    const pct = d.total > 0 ? Math.round((d.current / d.total) * 100) : 0
+    progress.value = {
+      show: true,
+      title: t('github.recommending'),
+      msg: `${t('github.recommendProgress', { current: d.current, total: d.total })}`,
+      sub: d.message || '',
+      pct,
+      done: d.status === 'done',
+      doneMsg: d.status === 'done' ? t('github.recommendComplete', { count: d.found_repos?.length || 0 }) : '',
+    }
+    if (d.status === 'done') {
+      if (recommendTimer) { clearInterval(recommendTimer); recommendTimer = null }
+      recommendRunning.value = false
+    }
+  } catch {
+    if (recommendTimer) { clearInterval(recommendTimer); recommendTimer = null }
+    recommendRunning.value = false
+    progress.value.show = false
+  }
+}
+
+// ── Recommendations ──────────────────────────────────────────────────────────────
+const recommendations = ref<any[]>([])
+const recTotal = ref(0)
+const recPage = ref(1)
+const recPageSize = ref(20)
+const recSearch = ref('')
+
+const recTotalPages = computed(() => Math.max(1, Math.ceil(recTotal.value / recPageSize.value)))
+
+watch(recPageSize, () => { recPage.value = 1; loadRecommendations() })
+
+const loadRecommendations = async () => {
+  if (activeTab.value !== 'recommended') return
+  listLoading.value = true
+  try {
+    const res: any = await github.listRecommendations({
+      page: recPage.value,
+      page_size: recPageSize.value,
+    })
+    recommendations.value = res.data?.items || []
+    recTotal.value = res.data?.total || 0
+    loaded.value = true
+  } catch { /* ignore */ }
+  listLoading.value = false
+}
+
+const recTagList = (rec: any) => {
+  if (!rec.ai_tags) return []
+  const raw = rec.ai_tags
+  if (raw.startsWith('[')) {
+    try { return JSON.parse(raw) } catch { return [] }
+  }
+  return raw.split(',').map((t: string) => t.trim()).filter(Boolean).slice(0, 4)
+}
+
+// ── Import / Export ───────────────────────────────────────────────────────────────
 const importInput = ref<HTMLInputElement | null>(null)
 
 const triggerImport = () => {
@@ -509,16 +782,33 @@ const doExport = async () => {
   }
 }
 
-const placeholderAnalyze = () => {
-  notify.value = { type: 'info', msg: 'AI analysis will be available in a future update' }
+// ── Progress ─────────────────────────────────────────────────────────────────────
+const progress = ref<{
+  show: boolean
+  title: string
+  msg: string
+  sub: string
+  pct: number
+  done: boolean
+  doneMsg: string
+}>({ show: false, title: '', msg: '', sub: '', pct: 0, done: false, doneMsg: '' })
+
+// ── Drawer ────────────────────────────────────────────────────────────────────────
+const drawerOpen = ref(false)
+const drawerRepoId = ref<number | null>(null)
+
+const openDrawer = (repoId: number) => {
+  drawerRepoId.value = repoId
+  drawerOpen.value = true
 }
 
+// ── Notification ──────────────────────────────────────────────────────────────────
 const notify = ref<{ type: string; msg: string } | null>(null)
 watch(notify, (val) => {
   if (val) setTimeout(() => { notify.value = null }, 3000)
 })
 
-// ── Delete repo ───────────────────────────────────────────────────────────────
+// ── Delete repo ───────────────────────────────────────────────────────────────────
 const deleteRepo = ref<any>(null)
 
 const confirmDeleteRepo = (repo: any) => {
@@ -535,7 +825,7 @@ const doDeleteRepo = async () => {
   } catch { /* ignore */ }
 }
 
-// ── Utils ─────────────────────────────────────────────────────────────────────
+// ── Utils ─────────────────────────────────────────────────────────────────────────
 const truncateTitle = (s: string) => {
   if (!s) return ''
   const hasCJK = /[一-鿿]/.test(s)
@@ -543,16 +833,25 @@ const truncateTitle = (s: string) => {
   return s.length > 25 ? s.slice(0, 25) + '...' : s
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+const truncateSummary = (s: string) => {
+  if (!s) return ''
+  return s.length > 30 ? s.slice(0, 30) + '...' : s
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────────
 onMounted(async () => {
   await loadAccounts()
   listLoading.value = false
   if (accounts.value.length === 0) {
     loaded.value = false
   } else {
-    // Auto-select first account and load its repos
     activeAccountId.value = accounts.value[0].id
     await loadRepos()
   }
+})
+
+onUnmounted(() => {
+  if (analyzeTimer) clearInterval(analyzeTimer)
+  if (recommendTimer) clearInterval(recommendTimer)
 })
 </script>

@@ -7,5 +7,6 @@ from app.models.system_config import SystemConfig
 from app.models.collection import Collection
 from app.models.github_account import GitHubAccount
 from app.models.starred_repo import StarredRepo
+from app.models.recommended_repo import RecommendedRepo
 
-__all__ = ["Base", "TimestampMixin", "User", "Bookmark", "AuditLog", "ModelVersion", "SystemConfig", "Collection", "GitHubAccount", "StarredRepo"]
+__all__ = ["Base", "TimestampMixin", "User", "Bookmark", "AuditLog", "ModelVersion", "SystemConfig", "Collection", "GitHubAccount", "StarredRepo", "RecommendedRepo"]

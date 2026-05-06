@@ -65,6 +65,12 @@ export const github = {
     })
   },
   exportJson: () => request.get('/github/repos/export', { responseType: 'blob' }),
+  analyzeAll: () => request.post('/github/repos/analyze-all'),
+  analyzeProgress: () => request.get('/github/repos/analyze-progress'),
+  getRepo: (id: number) => request.get(`/github/repos/${id}`),
+  generateRecommendations: (data?: { top_k_tags?: number }) => request.post('/github/repos/generate-recommendations', data || {}),
+  recommendationsProgress: () => request.get('/github/repos/recommendations-progress'),
+  listRecommendations: (params: { page?: number; page_size?: number } = {}) => request.get('/github/repos/recommendations', { params }),
 }
 
 export const admin = {

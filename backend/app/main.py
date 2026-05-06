@@ -1,4 +1,5 @@
 import asyncio
+import concurrent.futures
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from contextlib import asynccontextmanager
@@ -13,8 +14,10 @@ logger = logging.getLogger(__name__)
 
 from app.core.config import get_settings
 from app.core.logging import setup_logging
-from app.core.database import init_db
+from app.core.database import init_db, SessionLocal
 from app.services.embedding import train_index
+
+_thread_pool = concurrent.futures.ThreadPoolExecutor(max_workers=4)
 
 settings = get_settings()
 setup_logging(settings.ENVIRONMENT)
@@ -22,10 +25,60 @@ setup_logging(settings.ENVIRONMENT)
 scheduler = AsyncIOScheduler()
 
 
+async def _daily_recommendations():
+    """Daily cron: generate recommendations for all users with GitHub accounts."""
+    logger.info("[CRON] Starting daily recommendation generation...")
+    try:
+        from app.models.github_account import GitHubAccount
+        from sqlalchemy import select
+
+        def _generate_all():
+            db = SessionLocal()
+            try:
+                accounts = db.execute(
+                    select(GitHubAccount).where(GitHubAccount.is_deleted == False)
+                ).all()
+                db.close()
+
+                for (account,) in accounts:
+                    try:
+                        # Use the recommendation logic from github module
+                        from app.api.github import _run_recommendation, _recommendation_progress
+                        import threading
+                        from datetime import datetime, timezone
+
+                        _recommendation_progress[account.user_id] = {
+                            "status": "starting",
+                            "total": 0,
+                            "current": 0,
+                            "message": "Daily auto-recommendation...",
+                            "top_tags": [],
+                            "found_repos": [],
+                            "started_at": datetime.now(timezone.utc).isoformat(),
+                        }
+                        t = threading.Thread(
+                            target=_run_recommendation,
+                            args=(account.user_id, account.token, 3),
+                            daemon=True,
+                        )
+                        t.start()
+                        t.join(timeout=300)  # Max 5 min per user
+                    except Exception as e:
+                        logger.error(f"[CRON] Recommendation failed for user {account.user_id}: {e}")
+
+            except Exception as e:
+                logger.error(f"[CRON] Daily recommendation error: {e}")
+
+        await asyncio.get_event_loop().run_in_executor(_thread_pool, _generate_all)
+    except Exception as e:
+        logger.error(f"[CRON] Daily recommendation failed: {e}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
     scheduler.add_job(train_index, "interval", hours=1, id="train_index", replace_existing=True)
+    scheduler.add_job(_daily_recommendations, "cron", hour=3, minute=0, id="daily_recommendations", replace_existing=True)
     scheduler.start()
     yield
     scheduler.shutdown(wait=False)
@@ -33,7 +86,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Bookmark Recommender",
-    version="0.2.9",
+    version="0.2.10",
     lifespan=lifespan,
 )
 

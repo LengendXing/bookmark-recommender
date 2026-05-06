@@ -1,5 +1,36 @@
 # Bookmark Recommender 维护日志
 
+## v0.2.10 - 2026-05-06
+### 变更内容
+- GitHub 开源项目 AI 分析：对已 Star 项目调用 AI 分析生成标签/摘要/分类
+- GitHub 推荐引擎：基于用户标签画像搜索 GitHub 发现新项目
+- 新增 `br_recommended_repos` 表存储推荐项目（含 AI 标签/摘要/评分/匹配标签）
+- 后端新增 8 个端点：analyze-all / analyze-progress / generate-recommendations / recommendations-progress / recommendations/sse / recommendations / repos/{id}
+- 新增后台分析线程（逐条分析，进度轮询）和推荐线程（按 Top-K 标签搜索）
+- 新增每日定时推荐任务（APScheduler cron 凌晨 3:00）
+- 前端新增标签页切换（Starred / Recommended）
+- 前端新增分析/推荐进度弹窗（百分比进度条 + 轮询状态更新）
+- 前端新增 RepoDetailDrawer 组件（右侧滑入，展示 AI 分析/AI 标签/README/完整元数据）
+- 仓库名改为按钮触发抽屉，不再外链跳转 GitHub
+- AI 分析结果（AI 标签/摘要）在 Starred 列表内联展示
+- 推荐列表展示评分/匹配标签，未读项目高亮
+- 推荐列表分页（每页 10/20/50）
+- API 限流备注：GitHub Search API 30 req/min（认证用户），代码中每标签 1 页 10 条
+
+### 影响范围
+- 后端：api/github.py（新增分析/推荐/SSE/进度 endpoint），services/ai_service.py（新增 analyze_repo 函数族），services/github_service.py（新增 search_repos_by_topic），models/recommended_repo.py（新增），schemas/github.py（新增 RecommendedRepoOut），main.py（新增每日定时任务），migrations/002_add_repo_fields.sql + 003_create_recommended_repos.sql
+- 前端：GitHubProjects.vue（标签页、分析/推荐按钮、进度弹窗、抽屉集成），RepoDetailDrawer.vue（新增组件），api/index.ts（新增 6 个 API 函数），i18n/en.json + zh.json（新增 30+ keys）
+- 依赖：新增 APScheduler（后端定时任务）
+
+### 功能列表
+- AI 分析 Star 仓库（批量逐条分析 + 进度轮询）
+- 推荐引擎（标签画像 → GitHub 搜索 → AI 评分推荐）
+- SSE 推送 + API 拉取双通道
+- 每日凌晨 3:00 定时推荐
+- 推荐项目列表（分页/评分/标签展示）
+- RepoDetailDrawer 详情组件
+- 分析/推荐进度弹窗
+
 ## v0.2.9 - 2026-05-06
 ### 变更内容
 - 新增开源项目管理模块：菜单在审计日志上方，独立页面
