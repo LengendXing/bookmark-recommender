@@ -1,5 +1,13 @@
 <template>
   <div class="flex h-screen bg-background text-foreground overflow-hidden">
+    <!-- Global loading bar -->
+    <div
+      v-if="loading"
+      class="fixed top-0 left-0 right-0 z-50 h-0.5 bg-card overflow-hidden"
+    >
+      <div class="h-full w-full loading-bar-slide" />
+    </div>
+
     <!-- Overlay for mobile -->
     <div
       v-if="sidebarOpen"
@@ -105,6 +113,9 @@
 import { inject, ref, computed, type Ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useLoading } from '@/composables/useLoading'
+
+const { loading } = useLoading()
 import {
   LayoutDashboard,
   Bookmark,

@@ -1,5 +1,39 @@
 # Bookmark Recommender 维护日志
 
+## v0.2.7 - 2026-05-06
+### 变更内容
+- 全局路由加载进度条：菜单切换即时响应，非阻塞式路由跳转
+- 五页面骨架屏加载态：Dashboard/Audit/Model/Settings/Bookmarks 数据加载时展示骨架屏
+- 新增 SkeletonBox / SkeletonTable / SkeletonCard 基础骨架组件
+- 新增 useLoading composable 管理全局加载状态
+- 修复 Audit 页面翻页无效 bug（补充 watch(page, load)）
+- 恢复管理员默认账号密码
+
+### 影响范围
+- 前端：AdminLayout.vue（全局加载条），main.ts（路由守卫），新增 components/SkeletonBox.vue、SkeletonTable.vue、SkeletonCard.vue，新增 composables/useLoading.ts
+- 五个页面：Dashboard.vue、Audit.vue、Model.vue、Settings.vue、Bookmarks.vue
+- 全局样式：main.css（非波纹式对角线渐变骨架屏动画）
+
+### 功能列表
+- 菜单点击瞬间切换，顶部0.5px细进度条动画（对角线渐变滑过，非波纹/音浪式）
+- 骨架屏加载态：对角线渐变 shimmer 动画，非传统波纹式
+- 骨架屏组件支持自定义宽高和圆角
+### 变更内容
+- AI 分析接入 Playwright 无头浏览器：分析书签前先实际访问 URL 抓取真实页面内容
+- 新增 `scrape_page_sync()` 函数，使用 Playwright sync API 提取页面标题、描述、正文
+- `_run_analysis()` 先抓取后分析，AI 基于真实网页内容生成标题/描述/标签/分类
+- 修复 Anthropic SDK 0.97+ base_url 自动追加 /v1 导致的 404 问题
+- 修复 `GET /analyze-progress` 路由被 `/{bookmark_id}` 拦截的问题（静态路由移到动态路由之前）
+
+### 影响范围
+- 后端：services/scraper.py（新增 Playwright 抓取），api/bookmarks.py（路由修复、分析流程改造），services/ai_service.py（Anthropic endpoint 兼容修复）
+- 新增依赖：playwright>=1.49.0
+
+### 功能列表
+- Playwright 无头浏览器自动抓取网页内容
+- AI 基于真实网页内容做归纳分析
+- 进度条实时显示分析百分比
+
 ## v0.2.5 - 2026-05-05
 ### 变更内容
 - 搜索框合并：常规搜索 + 智能搜索 → 单个输入框 + 前置下拉切换（常规搜索/智能搜索）

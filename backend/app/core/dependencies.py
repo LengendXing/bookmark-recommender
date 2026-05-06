@@ -28,6 +28,6 @@ def get_current_user(
 
 
 def get_admin_user(user: User = Depends(get_current_user)) -> User:
-    if user.username != "admin":
+    if user.id != 1:
         raise HTTPException(status_code=403, detail=f"{{'code': {ERROR_PERMISSION_DENIED}, 'message': 'Permission denied'}}")
     return user

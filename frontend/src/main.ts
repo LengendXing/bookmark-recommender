@@ -5,6 +5,7 @@ import { createI18n } from 'vue-i18n'
 import App from './App.vue'
 import zhCN from './i18n/locales/zh.json'
 import enUS from './i18n/locales/en.json'
+import { useLoading } from './composables/useLoading'
 import './styles/main.css'
 
 const routes = [
@@ -19,11 +20,19 @@ const routes = [
 
 const router = createRouter({ history: createWebHistory(), routes })
 const i18n = createI18n({ legacy: false, locale: 'zh', fallbackLocale: 'en', messages: { zh: zhCN, en: enUS } })
+const { start, done } = useLoading()
 
 router.beforeEach((to, _from, next) => {
   const token = localStorage.getItem('token')
   if (to.meta.requiresAuth && !token) next('/login')
-  else next()
+  else {
+    if (to.name !== _from.name) start()
+    next()
+  }
+})
+
+router.afterEach(() => {
+  setTimeout(done, 200)
 })
 
 const app = createApp(App)

@@ -112,7 +112,13 @@ def _call_openai(cfg: dict, user_content: str) -> dict:
 
 
 def _call_anthropic(cfg: dict, user_content: str) -> dict:
-    client = Anthropic(api_key=cfg["api_key"], base_url=cfg["endpoint"], timeout=120)
+    endpoint = cfg["endpoint"]
+    # Anthropic SDK >=0.50 auto-appends /v1, so strip it from user config
+    if endpoint.endswith("/v1"):
+        endpoint = endpoint[:-3]
+    elif endpoint.endswith("/v1/"):
+        endpoint = endpoint[:-4]
+    client = Anthropic(api_key=cfg["api_key"], base_url=endpoint, timeout=120)
     try:
         response = client.messages.create(
             model=cfg["model"],

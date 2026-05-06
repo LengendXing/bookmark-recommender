@@ -3,8 +3,13 @@ import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+import json
+import logging
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+
+logger = logging.getLogger(__name__)
 
 from app.core.config import get_settings
 from app.core.logging import setup_logging
@@ -40,13 +45,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.api import auth, bookmarks, recommend, system_config, collections
+
+@app.middleware("http")
+async def log_push_body(request: Request, call_next):
+    if request.url.path.endswith("/push") and request.method == "POST":
+        body = await request.body()
+        logger.info(f"[PUSH REQUEST] Body: {body.decode()[:2000]}")
+        async def receive():
+            return {"type": "http.request", "body": body}
+        request._receive = receive
+    response = await call_next(request)
+    return response
+
+from app.api import admin, auth, bookmarks, recommend, system_config, collections
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(bookmarks.router, prefix="/api/bookmarks", tags=["bookmarks"])
 app.include_router(recommend.router, prefix="/api/recommend", tags=["recommend"])
 app.include_router(system_config.router, prefix="/api/system-config", tags=["system"])
 app.include_router(collections.router, prefix="/api/collections", tags=["collections"])
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
 
 @app.get("/health")

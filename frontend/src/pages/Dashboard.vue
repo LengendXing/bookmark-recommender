@@ -2,7 +2,19 @@
   <div class="p-6 lg:p-8">
     <h2 class="text-xl font-semibold tracking-tight mb-8">{{ t('dashboard.title') }}</h2>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Skeleton loading -->
+    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div v-for="i in 4" :key="i" class="rounded-xl p-5 space-y-4" style="background-color: hsl(var(--card))">
+        <div class="flex items-center gap-3">
+          <SkeletonBox width="40px" height="40px" borderRadius="12px" />
+          <SkeletonBox width="80px" height="14px" />
+        </div>
+        <SkeletonBox width="60%" height="32px" />
+        <SkeletonBox width="40%" height="12px" />
+      </div>
+    </div>
+
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <!-- Bookmarks -->
       <div class="rounded-xl p-5 transition-all duration-200 hover:shadow-md cursor-default" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)">
         <div class="flex items-center gap-3 mb-4">
@@ -56,14 +68,17 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { admin } from '@/api'
 import { Bookmark, Users, ScrollText, Cpu } from 'lucide-vue-next'
+import SkeletonBox from '@/components/SkeletonBox.vue'
 
 const { t } = useI18n()
 const stats = ref<any>({})
+const loading = ref(true)
 
 onMounted(async () => {
   try {
     const res = await admin.stats()
     stats.value = res.data
   } catch (_) {}
+  loading.value = false
 })
 </script>

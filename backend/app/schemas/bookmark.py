@@ -49,6 +49,24 @@ class BookmarkOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class BookmarkPushItem(BaseModel):
+    url: str = Field(max_length=2048)
+    bookmark_title: str = Field(default="", max_length=512)
+    folder_path: str = ""
+    date_added: str = ""
+    page_title: str = ""
+    page_description: str = ""
+    page_text: str = ""
+    generated_title: str = ""
+    generated_description: str = ""
+    crawl_error: str = ""
+    tags: str = ""
+
+
+class BookmarkPushRequest(BaseModel):
+    bookmarks: list[BookmarkPushItem] = Field(min_length=1, max_length=500)
+
+
 class BookmarkMove(BaseModel):
     collection_id: int | None = None
 

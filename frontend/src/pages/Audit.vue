@@ -2,7 +2,12 @@
   <div class="p-6 lg:p-8">
     <h2 class="text-xl font-semibold tracking-tight mb-6">{{ t('audit.title') }}</h2>
 
-    <div class="rounded-xl overflow-hidden" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04)">
+    <!-- Skeleton loading -->
+    <div v-if="loading" class="space-y-2">
+      <SkeletonTable :rows="8" />
+    </div>
+
+    <div v-else class="rounded-xl overflow-hidden" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04)">
       <table class="w-full text-sm">
         <thead>
           <tr style="background-color: hsl(var(--muted) / 0.4)">
@@ -52,21 +57,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { admin } from '@/api'
 import { ShieldCheck } from 'lucide-vue-next'
+import SkeletonTable from '@/components/SkeletonTable.vue'
 
 const { t } = useI18n()
 const items = ref<any[]>([])
 const total = ref(0)
 const page = ref(1)
+const loading = ref(true)
 
-onMounted(async () => {
+const load = async () => {
+  loading.value = true
   try {
     const res = await admin.auditLogs({ page: page.value })
     items.value = res.data.items
     total.value = res.data.total
   } catch (_) {}
-})
+  loading.value = false
+}
+
+onMounted(load)
+watch(page, load)
 </script>

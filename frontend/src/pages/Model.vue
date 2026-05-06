@@ -39,8 +39,13 @@
       </div>
     </div>
 
+    <!-- Skeleton loading -->
+    <div v-if="loading" class="space-y-2">
+      <SkeletonTable :rows="4" />
+    </div>
+
     <!-- Table -->
-    <div class="rounded-xl overflow-hidden" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04)">
+    <div v-else class="rounded-xl overflow-hidden" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04)">
       <table class="w-full text-sm">
         <thead>
           <tr style="background-color: hsl(var(--muted) / 0.4)">
@@ -86,6 +91,7 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { recommend } from '@/api'
 import { Zap, Cpu } from 'lucide-vue-next'
+import SkeletonTable from '@/components/SkeletonTable.vue'
 
 const { t } = useI18n()
 const versions = ref<any[]>([])
@@ -94,12 +100,15 @@ const trainOk = ref(true)
 const showVerify = ref(false)
 const verifyCode = ref('')
 const verifyError = ref('')
+const loading = ref(true)
 
 const load = async () => {
+  loading.value = true
   try {
     const res = await recommend.modelStatus()
     versions.value = res.data
   } catch (_) {}
+  loading.value = false
 }
 
 const confirmTrain = async () => {

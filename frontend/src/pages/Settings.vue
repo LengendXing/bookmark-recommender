@@ -2,7 +2,28 @@
   <div class="p-6 lg:p-8">
     <h2 class="text-xl font-semibold tracking-tight mb-6">{{ t('settings.title') }}</h2>
 
-    <div class="max-w-lg rounded-2xl p-6 shadow-sm space-y-6" style="background-color: hsl(var(--card))">
+    <!-- Skeleton loading -->
+    <div v-if="pageLoading" class="max-w-lg rounded-2xl p-6 shadow-sm space-y-5" style="background-color: hsl(var(--card))">
+      <div class="space-y-3">
+        <SkeletonBox width="60px" height="12px" />
+        <SkeletonBox width="100%" height="38px" />
+      </div>
+      <div class="space-y-3">
+        <SkeletonBox width="50px" height="12px" />
+        <SkeletonBox width="100%" height="38px" />
+      </div>
+      <div class="space-y-3">
+        <SkeletonBox width="70px" height="12px" />
+        <SkeletonBox width="100%" height="38px" />
+      </div>
+      <div class="space-y-3">
+        <SkeletonBox width="40px" height="12px" />
+        <SkeletonBox width="100%" height="38px" />
+      </div>
+      <SkeletonBox width="100%" height="42px" />
+    </div>
+
+    <div v-else class="max-w-lg rounded-2xl p-6 shadow-sm space-y-6" style="background-color: hsl(var(--card))">
       <!-- Config Form -->
       <form @submit.prevent="handleSave" class="space-y-5">
         <div>
@@ -110,10 +131,12 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { settings } from '@/api'
+import SkeletonBox from '@/components/SkeletonBox.vue'
 
 const { t } = useI18n()
 const form = ref({ api_endpoint: '', api_key: '', api_provider: 'openai', ai_model: '' })
 const loading = ref(false)
+const pageLoading = ref(true)
 const statusMsg = ref('')
 const statusOk = ref(true)
 
@@ -129,7 +152,9 @@ onMounted(async () => {
     form.value.api_key = res.data.api_key || ''
     form.value.api_provider = res.data.api_provider || 'openai'
     form.value.ai_model = res.data.ai_model || ''
-  } catch (_) {}
+  } catch (_) {} finally {
+    pageLoading.value = false
+  }
 })
 
 const handleSave = async () => {

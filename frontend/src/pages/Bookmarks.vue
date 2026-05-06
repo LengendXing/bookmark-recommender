@@ -329,8 +329,13 @@
         {{ analyzeMsg }}
       </div>
 
+      <!-- Table Skeleton -->
+      <div v-if="listLoading" class="space-y-2">
+        <SkeletonTable :rows="8" />
+      </div>
+
       <!-- Table -->
-      <div class="rounded-xl overflow-hidden" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04)">
+      <div v-else class="rounded-xl overflow-hidden" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04)">
         <table class="w-full text-sm">
           <thead>
             <tr style="background-color: hsl(var(--muted) / 0.4)">
@@ -447,8 +452,10 @@ import { useI18n } from 'vue-i18n'
 import { bookmarks, collections as collectionsApi, recommend } from '@/api'
 import { Search, Plus, Upload, FileDown, Trash2, Bookmark, Sparkles, Folder, Pencil, MoreVertical } from 'lucide-vue-next'
 import BookmarkDrawer from '@/components/BookmarkDrawer.vue'
+import SkeletonTable from '@/components/SkeletonTable.vue'
 
 const { t } = useI18n()
+const listLoading = ref(true)
 const items = ref<any[]>([])
 const total = ref(0)
 const page = ref(1)
@@ -705,6 +712,7 @@ const handleAnalyzeAll = async () => {
 const displayItems = computed(() => semanticMode.value ? semanticResults.value : items.value)
 
 const load = async () => {
+  listLoading.value = true
   error.value = ''
   try {
     const params: any = { page: page.value, page_size: pageSize, search: searchQuery.value }
@@ -716,6 +724,8 @@ const load = async () => {
     total.value = res.data.total
   } catch (e: any) {
     error.value = e.response?.data?.message || 'Failed to load'
+  } finally {
+    listLoading.value = false
   }
 }
 
@@ -809,6 +819,7 @@ watch(searchQuery, () => {
 watch(searchMode, () => {
   if (semanticMode.value) clearSemanticSearch()
 })
+watch(page, () => load())
 onMounted(() => { load(); loadCollections(); document.addEventListener('click', closeMenu) })
 onUnmounted(() => {
   document.removeEventListener('click', closeMenu)
