@@ -71,6 +71,15 @@ class BookmarkMove(BaseModel):
     collection_id: int | None = None
 
 
+class BatchDeleteRequest(BaseModel):
+    ids: list[int] = Field(min_length=1, max_length=200)
+
+
+class BatchMoveRequest(BaseModel):
+    ids: list[int] = Field(min_length=1, max_length=200)
+    collection_id: int | None = None
+
+
 class RecommendRequest(BaseModel):
     query: str = Field(min_length=1, max_length=512)
     limit: int = Field(default=10, ge=1, le=50)
