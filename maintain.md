@@ -1,5 +1,24 @@
 # Bookmark Recommender 维护日志
 
+## v0.2.11 - 2026-05-06
+### 变更内容
+- 书签批量操作：支持多选书签后批量删除和批量移动到收藏夹
+- 表格新增复选框列（表头全选/每行单选）
+- 批量操作工具栏（显示已选数量 / 批量删除 / 批量移动 / 取消选择）
+- 批量移动弹窗复用收藏夹列表交互模式
+- 分页/搜索/切换收藏夹自动清空选中状态
+- 后端新增 batch-delete / batch-move 端点（批量所有权校验 + 审计日志）
+
+### 影响范围
+- 后端：api/bookmarks.py（新增 batch-delete / batch-move 端点），schemas/bookmark.py（新增 BatchDeleteRequest / BatchMoveRequest）
+- 前端：Bookmarks.vue（复选框列 + 批量工具栏 + 批量操作逻辑），api/index.ts（batchDelete / batchMove 函数），i18n/en.json + zh.json（新增 batchDelete / batchMove / batchMoveTo / batchRemoveFromCollection / selectAll / selected / clearSelection / batchDeleteConfirm）
+
+### 功能列表
+- 书签多选（全选/单选/取消选择）
+- 批量删除（确认弹窗 → API 批量删除 → 自动刷新）
+- 批量移动（选择目标收藏夹 → API 批量移动 → 自动刷新）
+- 分页/搜索切换自动清空选中
+
 ## v0.2.10 - 2026-05-06
 ### 变更内容
 - GitHub 开源项目 AI 分析：对已 Star 项目调用 AI 分析生成标签/摘要/分类
