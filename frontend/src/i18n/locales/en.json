@@ -84,6 +84,13 @@
     "cancel": "Cancel",
     "save": "Save"
   },
+  "pagination": {
+    "perPage": "Per page",
+    "pageOf": "Page {current} / {total}",
+    "jumpTo": "Go to page",
+    "prev": "Prev",
+    "next": "Next"
+  },
   "audit": {
     "title": "Audit Logs",
     "action": "Action",

@@ -84,6 +84,13 @@
     "cancel": "取消",
     "save": "保存"
   },
+  "pagination": {
+    "perPage": "每页条数",
+    "pageOf": "第 {current} / {total} 页",
+    "jumpTo": "跳转到",
+    "prev": "上一页",
+    "next": "下一页"
+  },
   "audit": {
     "title": "审计日志",
     "action": "操作",

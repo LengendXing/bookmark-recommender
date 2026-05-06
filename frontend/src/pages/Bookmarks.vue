@@ -414,19 +414,53 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="!semanticMode" class="flex items-center justify-between mt-4">
-        <p class="text-xs text-muted-foreground">Total: {{ total }}</p>
+      <div v-if="!semanticMode" class="flex items-center justify-between mt-4 gap-3 flex-wrap">
+        <!-- Left: page size -->
+        <div class="flex items-center gap-1.5">
+          <label class="text-xs text-muted-foreground">{{ t('pagination.perPage') }}</label>
+          <select
+            v-model="pageSize"
+            class="px-2 py-1 rounded-lg text-xs font-medium border border-border/50 focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all"
+            style="background-color: hsl(var(--muted) / 0.4)"
+          >
+            <option v-for="n in [10, 20, 50, 100]" :key="n" :value="n">{{ n }}</option>
+          </select>
+        </div>
+
+        <!-- Center: page info + jump -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-muted-foreground">{{ t('pagination.pageOf', { current: page, total: totalPages || 1 }) }}</span>
+          <div class="flex items-center gap-1">
+            <input
+              v-model="jumpPage"
+              type="number"
+              :min="1"
+              :max="totalPages"
+              :placeholder="t('pagination.jumpTo')"
+              class="w-14 px-2 py-1 rounded-lg text-xs text-center font-medium border border-border/50 focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all"
+              style="background-color: hsl(var(--muted) / 0.4)"
+              @keyup.enter="goToPage"
+            />
+            <button
+              @click="goToPage"
+              :disabled="!jumpPage || Number(jumpPage) < 1 || Number(jumpPage) > totalPages"
+              class="px-2 py-1 rounded-lg text-xs font-medium border border-border/50 hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >GO</button>
+          </div>
+        </div>
+
+        <!-- Right: prev / next -->
         <div class="flex gap-1.5">
           <button
             @click="page--"
             :disabled="page <= 1"
             class="px-3 py-1.5 rounded-lg text-xs font-medium border border-border/50 hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          >Prev</button>
+          >{{ t('pagination.prev') }}</button>
           <button
             @click="page++"
-            :disabled="page * pageSize >= total"
+            :disabled="page >= totalPages"
             class="px-3 py-1.5 rounded-lg text-xs font-medium border border-border/50 hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          >Next</button>
+          >{{ t('pagination.next') }}</button>
         </div>
       </div>
 
@@ -459,10 +493,20 @@ const listLoading = ref(true)
 const items = ref<any[]>([])
 const total = ref(0)
 const page = ref(1)
-const pageSize = 20
+const pageSize = ref(20)
+const jumpPage = ref('')
 const searchQuery = ref('')
 const searchMode = ref<'normal' | 'semantic'>('normal')
 const error = ref('')
+
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
+
+const goToPage = () => {
+  const n = Number(jumpPage.value)
+  if (!n || n < 1 || n > totalPages.value) return
+  page.value = n
+  jumpPage.value = ''
+}
 
 // Collections
 const collections = ref<any[]>([])
@@ -715,7 +759,7 @@ const load = async () => {
   listLoading.value = true
   error.value = ''
   try {
-    const params: any = { page: page.value, page_size: pageSize, search: searchQuery.value }
+    const params: any = { page: page.value, page_size: pageSize.value, search: searchQuery.value }
     if (selectedCollectionId.value !== null) {
       params.collection_id = selectedCollectionId.value
     }
@@ -820,6 +864,7 @@ watch(searchMode, () => {
   if (semanticMode.value) clearSemanticSearch()
 })
 watch(page, () => load())
+watch(pageSize, () => { page.value = 1; load() })
 onMounted(() => { load(); loadCollections(); document.addEventListener('click', closeMenu) })
 onUnmounted(() => {
   document.removeEventListener('click', closeMenu)
