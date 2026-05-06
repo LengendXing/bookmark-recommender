@@ -5,6 +5,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "bookmarks": "Bookmarks",
+    "github": "GitHub Projects",
     "audit": "Audit Logs",
     "model": "Model Status",
     "settings": "Settings",
@@ -82,7 +83,8 @@
   },
   "common": {
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "delete": "Delete"
   },
   "pagination": {
     "perPage": "Per page",
@@ -120,5 +122,41 @@
     "testFailed": "Connection Failed",
     "tokens": "Token Usage",
     "response": "Model Response"
+  },
+  "github": {
+    "title": "Open Source Projects",
+    "accounts": "Accounts",
+    "addAccount": "Add Account",
+    "deleteAccount": "Delete Account",
+    "allProjects": "All Projects",
+    "searchPlaceholder": "Search repos...",
+    "semanticSearchPlaceholder": "Describe what kind of projects...",
+    "searchNormal": "Normal Search",
+    "searchSemantic": "Semantic Search",
+    "import": "Import JSON",
+    "export": "Export JSON",
+    "analyze": "AI Analyze",
+    "sync": "Sync",
+    "delete": "Delete",
+    "name": "Name",
+    "owner": "Owner",
+    "description": "Description",
+    "language": "Language",
+    "stars": "Stars",
+    "forks": "Forks",
+    "addAccountTitle": "Add GitHub Account",
+    "oauthTab": "GitHub OAuth",
+    "tokenTab": "Personal Token",
+    "tokenLabel": "GitHub Token",
+    "tokenPlaceholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
+    "tokenHint": "Create a token at GitHub Settings → Developer settings → Personal access tokens. Requires 'repo' and 'user:starred' scopes.",
+    "save": "Save",
+    "noAccounts": "No accounts yet. Add one to get started.",
+    "noRepos": "No repos found. Sync or import to get started.",
+    "syncSuccess": "Sync complete: {count} new repos imported",
+    "deleteAccountConfirm": "Delete account \"{name}\"? Existing repos will remain.",
+    "deleteAccountHint": "This is a soft delete. You can re-add the same account later.",
+    "deleteRepoConfirm": "Delete this project from local list?",
+    "importSuccess": "Import complete: {imported} added, {skipped} skipped"
   }
 }

@@ -48,6 +48,25 @@ export const settings = {
   listModels: (data: { api_endpoint: string; api_key: string; api_provider: string; model: string }) => request.post('/system-config/models', data),
 }
 
+export const github = {
+  listAccounts: () => request.get('/github/accounts'),
+  addAccount: (token: string) => request.post('/github/accounts', { token }),
+  deleteAccount: (id: number) => request.delete(`/github/accounts/${id}`),
+  syncAccount: (id: number) => request.post(`/github/accounts/${id}/sync`),
+  listRepos: (params: { q?: string; page?: number; page_size?: number } = {}) => request.get('/github/repos', { params }),
+  semanticSearch: (query: string) => request.post('/github/repos/semantic-search', { query }),
+  deleteRepo: (id: number) => request.delete(`/github/repos/${id}`),
+  importJson: (accountId: number, file: File) => {
+    const formData = new FormData()
+    formData.append('account_id', String(accountId))
+    formData.append('file', file)
+    return request.post('/github/repos/import-json', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+  exportJson: () => request.get('/github/repos/export', { responseType: 'blob' }),
+}
+
 export const admin = {
   stats: () => request.get('/admin/stats'),
   auditLogs: (params: { page?: number; page_size?: number; action?: string } = {}) => request.get('/admin/audit-logs', { params }),

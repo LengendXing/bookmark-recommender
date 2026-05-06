@@ -1,5 +1,32 @@
 # Bookmark Recommender 维护日志
 
+## v0.2.9 - 2026-05-06
+### 变更内容
+- 新增开源项目管理模块：菜单在审计日志上方，独立页面
+- 左侧账户列表（添加/删除 GitHub Token 账户）
+- 添加账户弹窗（OAuth + Token 双 Tab，OAuth 为占位说明）
+- 右侧开源项目表格展示（仓库名/所有者/描述/语言/Star数/Fork数）
+- 后端新增 br_github_accounts 和 br_starred_repos 数据表
+- GitHub API 服务（获取用户信息/Star 列表/同步/搜索）
+- 导入/导出：JSON 文件批量导入（跳过已有），JSON 导出
+- 搜索：常规关键词搜索 + AI 语义搜索（基于嵌入向量相似度）
+- 一键分析按钮（UI 占位，功能待后续实现）
+- 删除项目确认弹窗
+- 完整 i18n 中英文翻译（github/开源项目管理）
+
+### 影响范围
+- 后端：models/github_account.py、starred_repo.py（新增），services/github_service.py（新增），schemas/github.py（新增），api/github.py（新增），services/embedding.py（新增 semantic_search），main.py（注册路由）
+- 前端：GitHubProjects.vue（新增页面），AdminLayout.vue（新增菜单项），main.ts（新增路由），api/index.ts（新增 github API），i18n/en.json、zh.json（新增 github + nav.github 块）
+- 依赖：python-multipart（已安装）
+
+### 功能列表
+- GitHub Token 账户管理（添加/删除）
+- GitHub Star 仓库同步到本地
+- 仓库列表（分页/搜索/语义搜索）
+- JSON 导入导出
+- 删除仓库
+- 一键分析占位按钮
+
 ## v0.2.8 - 2026-05-06
 ### 变更内容
 - 书签管理分页增强：新增每页条数选择器（10/20/50/100）

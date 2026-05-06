@@ -119,6 +119,7 @@ const { loading } = useLoading()
 import {
   LayoutDashboard,
   Bookmark,
+  Github,
   ShieldCheck,
   Cpu,
   Settings,
@@ -139,6 +140,7 @@ const isDark = ref(localStorage.getItem('dark') === 'true')
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'nav.dashboard' },
   { to: '/bookmarks', icon: Bookmark, label: 'nav.bookmarks' },
+  { to: '/github', icon: Github, label: 'nav.github' },
   { to: '/audit', icon: ShieldCheck, label: 'nav.audit' },
   { to: '/model', icon: Cpu, label: 'nav.model' },
   { to: '/settings', icon: Settings, label: 'nav.settings' },

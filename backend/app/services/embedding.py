@@ -113,6 +113,25 @@ def train_index():
         db.close()
 
 
+def semantic_search(query: str, candidate_texts: list[str], top_k: int = 20) -> tuple[list[int], list[float]]:
+    """Compute cosine similarity between query and candidates. Returns (indices, scores)."""
+    if not candidate_texts:
+        return [], []
+
+    model = _get_model()
+    query_emb = model.encode([query], normalize_embeddings=True)
+    doc_embs = model.encode(candidate_texts, normalize_embeddings=True)
+
+    scores = np.dot(doc_embs, query_emb.T).flatten()
+    if len(scores) == 0:
+        return [], []
+
+    k = min(top_k, len(scores))
+    top_indices = np.argsort(scores)[-k:][::-1]
+    top_scores = scores[top_indices]
+    return top_indices.tolist(), top_scores.tolist()
+
+
 def recommend(query: str, limit: int = 10) -> list[dict]:
     client = get_chroma_client()
     collection_name = "br_bookmarks"

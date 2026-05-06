@@ -5,6 +5,7 @@
   "nav": {
     "dashboard": "控制台",
     "bookmarks": "书签管理",
+    "github": "开源项目",
     "audit": "审计日志",
     "model": "模型状态",
     "settings": "系统配置",
@@ -82,7 +83,8 @@
   },
   "common": {
     "cancel": "取消",
-    "save": "保存"
+    "save": "保存",
+    "delete": "删除"
   },
   "pagination": {
     "perPage": "每页条数",
@@ -120,5 +122,41 @@
     "testFailed": "连接失败",
     "tokens": "Token 用量",
     "response": "模型响应"
+  },
+  "github": {
+    "title": "开源项目管理",
+    "accounts": "账户列表",
+    "addAccount": "添加账户",
+    "deleteAccount": "删除账户",
+    "allProjects": "全部项目",
+    "searchPlaceholder": "搜索仓库...",
+    "semanticSearchPlaceholder": "描述你想要的仓库...",
+    "searchNormal": "常规搜索",
+    "searchSemantic": "智能搜索",
+    "import": "导入 JSON",
+    "export": "导出 JSON",
+    "analyze": "一键分析",
+    "sync": "同步",
+    "delete": "删除",
+    "name": "名称",
+    "owner": "所有者",
+    "description": "描述",
+    "language": "语言",
+    "stars": "Star 数",
+    "forks": "Fork 数",
+    "addAccountTitle": "添加 GitHub 账户",
+    "oauthTab": "GitHub OAuth",
+    "tokenTab": "个人令牌",
+    "tokenLabel": "GitHub Token",
+    "tokenPlaceholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
+    "tokenHint": "在 GitHub Settings → Developer settings → Personal access tokens 创建 Token，需要勾选 'repo' 和 'user:starred' 权限。",
+    "save": "保存",
+    "noAccounts": "暂无账户，请先添加。",
+    "noRepos": "暂无仓库，请同步或导入。",
+    "syncSuccess": "同步完成：新增 {count} 个仓库",
+    "deleteAccountConfirm": "确定删除账户「{name}」？已有的仓库数据将保留。",
+    "deleteAccountHint": "此为软删除，后续可重新添加同一账户。",
+    "deleteRepoConfirm": "确定要删除这个项目吗？",
+    "importSuccess": "导入完成：新增 {imported} 个，跳过 {skipped} 个"
   }
 }
