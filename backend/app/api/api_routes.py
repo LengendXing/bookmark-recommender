@@ -67,6 +67,60 @@ def list_routes(
     })
 
 
+@router.get("/stats", response_model=Response)
+def get_stats(
+    db=Depends(get_db),
+    user: User = Depends(get_admin_user),
+):
+    from datetime import datetime, timezone
+
+    internal_count = db.execute(select(func.count()).select_from(ApiRoute)).scalar() or 0
+
+    q_ext = select(func.count())
+    try:
+        from app.models.external_api import ExternalApi
+        q_ext = q_ext.select_from(ExternalApi)
+    except Exception:
+        pass
+    external_count = db.execute(q_ext).scalar() or 0
+
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    calls_today = 0
+    recent_calls = []
+    try:
+        from app.models.api_call_log import ApiCallLog
+        calls_today = db.execute(
+            select(func.count()).select_from(ApiCallLog).where(ApiCallLog.created_at >= today)
+        ).scalar() or 0
+
+        recent = db.execute(
+            select(ApiCallLog).order_by(ApiCallLog.created_at.desc()).limit(20)
+        ).scalars().all()
+        recent_calls = [
+            {
+                "id": l.id,
+                "api_id": l.api_id,
+                "method": l.method,
+                "path": l.path,
+                "response_status": l.response_status,
+                "duration_ms": l.duration_ms,
+                "error": l.error,
+                "client_ip": l.client_ip,
+                "created_at": l.created_at if l.created_at else "",
+            }
+            for l in recent
+        ]
+    except Exception:
+        pass
+
+    return Response.ok(data={
+        "internal_count": internal_count,
+        "external_count": external_count,
+        "calls_today": calls_today,
+        "recent_calls": recent_calls,
+    })
+
+
 @router.get("/{route_id}", response_model=Response)
 def get_route(
     route_id: int,

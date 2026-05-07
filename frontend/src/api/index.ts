@@ -81,4 +81,15 @@ export const admin = {
     request.put(`/admin/api-routes/${id}`, data),
   apiRouteDelete: (id: number) => request.delete(`/admin/api-routes/${id}`),
   apiRoutesSync: () => request.post('/admin/api-routes/sync'),
+  apiRoutesStats: () => request.get('/admin/api-routes/stats'),
+  apiStats: () => request.get('/admin/api-stats'),
+  apiCallLogs: (params: { page?: number; page_size?: number; api_id?: number; method?: string } = {}) =>
+    request.get('/admin/api-call-logs', { params }),
+  externalApis: (params: { page?: number; page_size?: number; method?: string; search?: string } = {}) =>
+    request.get('/admin/external-apis', { params }),
+  externalApiGet: (id: number) => request.get(`/admin/external-apis/${id}`),
+  externalApiCreate: (data: any) => request.post('/admin/external-apis', data),
+  externalApiUpdate: (id: number, data: any) => request.put(`/admin/external-apis/${id}`, data),
+  externalApiDelete: (id: number) => request.delete(`/admin/external-apis/${id}`),
+  externalApiTest: (id: number, data: any) => request.post(`/admin/external-apis/${id}/test`, data),
 }

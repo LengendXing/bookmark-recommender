@@ -125,6 +125,12 @@ async def _daily_recommendations():
 async def lifespan(app: FastAPI):
     init_db()
     _sync_api_routes(app)
+    try:
+        from app.api.external_apis import register_all_external_routes, seed_native_endpoints
+        seed_native_endpoints(app)
+        register_all_external_routes(app)
+    except Exception as e:
+        logger.warning(f"[INIT] External API init skipped: {e}")
     scheduler.add_job(train_index, "interval", hours=1, id="train_index", replace_existing=True)
     scheduler.add_job(_daily_recommendations, "cron", hour=3, minute=0, id="daily_recommendations", replace_existing=True)
     scheduler.start()
@@ -134,7 +140,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Bookmark Recommender",
-    version="0.2.12",
+    version="0.3.0",
     lifespan=lifespan,
 )
 
@@ -199,7 +205,7 @@ async def request_logger(request: Request, call_next):
 
     return response
 
-from app.api import admin, api_routes, auth, bookmarks, recommend, system_config, github
+from app.api import admin, api_routes, api_stats, auth, bookmarks, external_apis, recommend, system_config, github
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(bookmarks.router, prefix="/api/bookmarks", tags=["bookmarks"])
@@ -208,6 +214,8 @@ app.include_router(system_config.router, prefix="/api/system-config", tags=["sys
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 app.include_router(github.router, prefix="/api/github", tags=["github"])
 app.include_router(api_routes.router, prefix="/api/admin/api-routes", tags=["api-routes"])
+app.include_router(external_apis.router, prefix="/api/admin/external-apis", tags=["external-apis"])
+app.include_router(api_stats.router, prefix="/api/admin", tags=["api-stats"])
 
 
 @app.get("/health")

@@ -15,6 +15,12 @@ export default defineConfig({
       '/api': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
+        bypass: (req) => {
+          const url = req.url || ''
+          // Don't proxy frontend SPA routes (only proxy actual API calls)
+          if (/^\/api(?!\/)/.test(url)) return url
+          if (/^\/api-/.test(url)) return url
+        },
       },
     },
   },

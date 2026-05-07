@@ -1,5 +1,38 @@
 # Bookmark Recommender 维护日志
 
+## v0.3.0 - 2026-05-07
+### 变更内容
+- API 管理三级结构重构：主面板（统计+调用日志）+ 内部接口（FastAPI 路由 CRUD）+ 外部接口（Python 脚本端点）
+- 新增 `br_external_apis` 表：存储用户创建的 Python 脚本 API 端点（method/path/script/headers/params）
+- 新增 `br_api_call_logs` 表：记录所有 API 调用日志（method/path/status/duration/client_ip）
+- 后端 `script_executor.py`：Python 沙箱执行引擎（受限 builtins + 30s 超时），支持动态脚本 API
+- 后端 `external_apis.py`：外部接口 CRUD（列表/创建/编辑/删除/测试）+ FastAPI 动态路由注册/注销
+- 后端 `api_routes.py`：新增 `/stats` 端点（内部接口数/外部接口数/今日调用量/最近调用日志）
+- 后端 `api_stats.py`：调用日志列表查询（分页 + api_id/method 过滤）
+- 后端 `main.py`：lifespan 中注册外部接口路由 + 自动发现 `POST /api/bookmarks/push` 原生端点
+- 后端启动时自动初始化 native 端点（is_native 保护不可删除/不可修改脚本）
+- 前端 AdminLayout：侧栏子菜单支持（展开/折叠 + ChevronDown 动画 + startsWith 路径匹配）
+- 前端主面板（Index）：3 个统计卡片 + API 调用日志表格（30s 自动刷新）+ 状态码彩色标签
+- 前端内部接口（InternalApis）：原 ApiManagement.vue CRUD 功能迁移
+- 前端外部接口（ExternalApis）：新建/编辑弹窗（headers/params 键值对编辑器 + Python 脚本编辑器）+ 测试弹窗（JSON 请求/响应 + 耗时）
+- Vite proxy bypass：排除 `/api-` 前缀前端路由，避免与 `/api` 后端代理冲突
+- i18n 新增 40+ keys（en.json + zh.json），覆盖三级 API 管理全部文案
+- 版本号更新为 0.3.0
+
+### 影响范围
+- 后端：models/external_api.py + api_call_log.py（新增），schemas/external_api.py + api_call_log.py（新增），api/external_apis.py + api_stats.py（新增），services/script_executor.py（新增），api/api_routes.py（新增 /stats），main.py（lifespan 动态路由注册 + 版本号），models/__init__.py（导入新模型），migrations/006 + 007（新增）
+- 前端：pages/ApiManagement/Index.vue + InternalApis.vue + ExternalApis.vue（新建/迁移），main.ts（嵌套路由），AdminLayout.vue（子菜单支持），api/index.ts（新增 admin API），i18n/en.json + zh.json（新增 keys），vite.config.ts（proxy bypass）
+
+### 功能列表
+- API 管理主面板：内部接口数 / 外部接口数 / 今日调用量统计
+- API 调用日志：最近 50 条实时展示（时间/方法/路径/状态码/耗时/客户端IP）
+- 内部接口 CRUD：同步 FastAPI 路由到数据库（自动扫描 + 手动创建/编辑/删除）
+- 外部接口管理：用户创建 Python 脚本端点 → 动态注册为实际可调用 API
+- Python 沙箱：安全执行用户脚本（白名单 builtins + 30s 超时 + 注入 request_data/headers/params）
+- 原生端点保护：`POST /api/bookmarks/push` 自动发现且不可删除/不可修改脚本
+- 外部接口测试：JSON 编辑器填写测试数据 → 执行脚本 → 查看返回结果 + 耗时
+- 侧栏子菜单：API 管理展开为概览/内部接口/外部接口三个子项
+
 ## v0.2.14 - 2026-05-07
 ### 变更内容
 - 全链路日志埋点：后端请求/响应日志 + 登录审计日志 + 前端 API 错误日志

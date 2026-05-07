@@ -37,18 +37,53 @@
 
       <!-- Navigation -->
       <nav class="flex-1 space-y-0.5 px-3 py-2">
-        <router-link
-          v-for="item in navItems"
-          :key="item.to"
-          :to="item.to"
-          :title="$t(item.label)"
-          class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150 overflow-hidden whitespace-nowrap"
-          :class="isActive(item.to) ? 'bg-accent/10 text-accent font-medium' : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'"
-        >
-          <component :is="item.icon" class="w-4 h-4 flex-shrink-0" />
-          <span>{{ $t(item.label) }}</span>
-          <div v-if="isActive(item.to)" class="ml-auto w-1 h-4 rounded-full bg-accent flex-shrink-0" />
-        </router-link>
+        <template v-for="item in navItems" :key="item.to">
+          <!-- Parent item (with or without children) -->
+          <div
+            v-if="item.children"
+            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150 overflow-hidden whitespace-nowrap cursor-pointer"
+            :class="isActive(item.to) ? 'bg-accent/10 text-accent font-medium' : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'"
+            @click="toggleMenu(item.to)"
+            :title="$t(item.label)"
+          >
+            <component :is="item.icon" class="w-4 h-4 flex-shrink-0" />
+            <span>{{ $t(item.label) }}</span>
+            <ChevronDown
+              v-if="sidebarOpen"
+              class="w-3.5 h-3.5 ml-auto flex-shrink-0 transition-transform duration-200"
+              :class="{ 'rotate-180': expandedMenus.includes(item.to) }"
+            />
+            <div v-if="isActive(item.to)" class="w-1 h-4 rounded-full bg-accent flex-shrink-0" />
+          </div>
+
+          <!-- Child items -->
+          <template v-if="item.children && expandedMenus.includes(item.to) && sidebarOpen">
+            <router-link
+              v-for="child in item.children"
+              :key="child.to"
+              :to="child.to"
+              :title="$t(child.label)"
+              class="flex items-center gap-3 pl-9 pr-3 py-1.5 rounded-lg text-xs transition-colors duration-150 overflow-hidden whitespace-nowrap"
+              :class="route.path === child.to ? 'text-accent font-medium' : 'text-muted-foreground hover:text-foreground'"
+            >
+              <component :is="child.icon" class="w-3.5 h-3.5 flex-shrink-0" />
+              <span>{{ $t(child.label) }}</span>
+            </router-link>
+          </template>
+
+          <!-- Regular item (no children) -->
+          <router-link
+            v-if="!item.children"
+            :to="item.to"
+            :title="$t(item.label)"
+            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150 overflow-hidden whitespace-nowrap"
+            :class="isActive(item.to) ? 'bg-accent/10 text-accent font-medium' : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'"
+          >
+            <component :is="item.icon" class="w-4 h-4 flex-shrink-0" />
+            <span>{{ $t(item.label) }}</span>
+            <div v-if="isActive(item.to)" class="ml-auto w-1 h-4 rounded-full bg-accent flex-shrink-0" />
+          </router-link>
+        </template>
       </nav>
 
       <!-- Logout -->
@@ -129,6 +164,9 @@ import {
   Moon,
   PanelLeftOpen,
   PanelLeftClose,
+  Route,
+  ExternalLink,
+  ChevronDown,
 } from 'lucide-vue-next'
 
 const sidebarOpen = ref(true)
@@ -138,17 +176,32 @@ const authStore = useAuthStore()
 const { locale } = inject('i18n', { locale: ref('zh') }) as { locale: Ref<string> }
 const isDark = ref(localStorage.getItem('dark') === 'true')
 
+const expandedMenus = ref<string[]>([])
+
+const toggleMenu = (path: string) => {
+  const idx = expandedMenus.value.indexOf(path)
+  if (idx >= 0) expandedMenus.value.splice(idx, 1)
+  else expandedMenus.value.push(path)
+}
+
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'nav.dashboard' },
   { to: '/bookmarks', icon: Bookmark, label: 'nav.bookmarks' },
-  { to: '/api-management', icon: Code2, label: 'nav.apiManagement' },
+  {
+    to: '/api-management', icon: Code2, label: 'nav.apiManagement',
+    children: [
+      { to: '/api-management/index', icon: LayoutDashboard, label: 'nav.apiOverview' },
+      { to: '/api-management/internal', icon: Route, label: 'nav.internalApis' },
+      { to: '/api-management/external', icon: ExternalLink, label: 'nav.externalApis' },
+    ],
+  },
   { to: '/github', icon: Github, label: 'nav.github' },
   { to: '/audit', icon: ShieldCheck, label: 'nav.audit' },
   { to: '/model', icon: Cpu, label: 'nav.model' },
   { to: '/settings', icon: Settings, label: 'nav.settings' },
 ]
 
-const isActive = (path: string) => route.path === path
+const isActive = (path: string) => route.path === path || route.path.startsWith(path + '/')
 
 const toggleDark = () => {
   isDark.value = !isDark.value

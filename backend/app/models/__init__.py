@@ -9,5 +9,7 @@ from app.models.github_account import GitHubAccount
 from app.models.starred_repo import StarredRepo
 from app.models.recommended_repo import RecommendedRepo
 from app.models.api_route import ApiRoute
+from app.models.external_api import ExternalApi
+from app.models.api_call_log import ApiCallLog
 
-__all__ = ["Base", "TimestampMixin", "User", "Bookmark", "AuditLog", "ModelVersion", "SystemConfig", "GitHubAccount", "StarredRepo", "RecommendedRepo", "ApiRoute"]
+__all__ = ["Base", "TimestampMixin", "User", "Bookmark", "AuditLog", "ModelVersion", "SystemConfig", "GitHubAccount", "StarredRepo", "RecommendedRepo", "ApiRoute", "ExternalApi", "ApiCallLog"]
