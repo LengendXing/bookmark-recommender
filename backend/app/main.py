@@ -25,6 +25,53 @@ setup_logging(settings.ENVIRONMENT)
 scheduler = AsyncIOScheduler()
 
 
+def _sync_api_routes(app: FastAPI):
+    """Sync registered routes into database on startup."""
+    try:
+        import json
+        from app.core.database import SessionLocal
+        from app.models.api_route import ApiRoute
+        from sqlalchemy import select
+
+        skip_prefixes = ("/openapi", "/docs", "/redoc")
+        skip_paths = ("/health",)
+        db = SessionLocal()
+        try:
+            for route in app.routes:
+                if not hasattr(route, "methods") or not hasattr(route, "path"):
+                    continue
+                path = route.path
+                if path.startswith(skip_prefixes) or path in skip_paths:
+                    continue
+                for method in route.methods:
+                    if method not in ("GET", "POST", "PUT", "DELETE", "PATCH"):
+                        continue
+                    existing = db.execute(
+                        select(ApiRoute).where(ApiRoute.method == method, ApiRoute.path == path)
+                    ).scalar_one_or_none()
+                    summary = getattr(route, "summary", "") or ""
+                    tags = list(getattr(route, "tags", []))
+                    tags_json = json.dumps(tags, ensure_ascii=False)
+                    if existing:
+                        if existing.source == "manual":
+                            continue
+                        existing.summary = summary
+                        existing.tags = tags_json
+                        existing.source = "auto"
+                        db.add(existing)
+                    else:
+                        db.add(ApiRoute(
+                            method=method, path=path, summary=summary,
+                            tags=tags_json, source="auto",
+                        ))
+            db.commit()
+        finally:
+            db.close()
+        logger.info("[INIT] API routes synced to database.")
+    except Exception as e:
+        logger.warning(f"[INIT] API route sync skipped: {e}")
+
+
 async def _daily_recommendations():
     """Daily cron: generate recommendations for all users with GitHub accounts."""
     logger.info("[CRON] Starting daily recommendation generation...")
@@ -77,6 +124,7 @@ async def _daily_recommendations():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    _sync_api_routes(app)
     scheduler.add_job(train_index, "interval", hours=1, id="train_index", replace_existing=True)
     scheduler.add_job(_daily_recommendations, "cron", hour=3, minute=0, id="daily_recommendations", replace_existing=True)
     scheduler.start()
@@ -86,7 +134,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Bookmark Recommender",
-    version="0.2.10",
+    version="0.2.12",
     lifespan=lifespan,
 )
 
@@ -110,7 +158,7 @@ async def log_push_body(request: Request, call_next):
     response = await call_next(request)
     return response
 
-from app.api import admin, auth, bookmarks, recommend, system_config, github
+from app.api import admin, api_routes, auth, bookmarks, recommend, system_config, github
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(bookmarks.router, prefix="/api/bookmarks", tags=["bookmarks"])
@@ -118,6 +166,7 @@ app.include_router(recommend.router, prefix="/api/recommend", tags=["recommend"]
 app.include_router(system_config.router, prefix="/api/system-config", tags=["system"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 app.include_router(github.router, prefix="/api/github", tags=["github"])
+app.include_router(api_routes.router, prefix="/api/admin/api-routes", tags=["api-routes"])
 
 
 @app.get("/health")

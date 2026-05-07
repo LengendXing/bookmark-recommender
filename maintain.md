@@ -1,5 +1,29 @@
 # Bookmark Recommender 维护日志
 
+## v0.2.12 - 2026-05-07
+### 变更内容
+- API 管理页面 CRUD 改造：从只读展示升级为完整增删改查
+- 新增 `br_api_routes` 数据表存储 API 路由元数据
+- 后端新增 6 个 CRUD 端点：列表/详情/创建/编辑/删除/同步
+- 同步端点：从 FastAPI 注册路由自动同步到数据库（手动路由不被覆盖）
+- 前端新增路由表单弹窗（method 下拉/path 输入/summary/tags/description/enabled）
+- 表格新增启用/禁用开关、来源标识（自动/手动）、编辑/删除操作按钮
+- 分页支持（每页 10/20/50）
+- 启动时自动初始同步
+
+### 影响范围
+- 后端：models/api_route.py（新增），schemas/api_route.py（新增），api/api_routes.py（新增 6 端点），main.py（注册路由 + 启动同步 + 版本号），models/__init__.py（导入 ApiRoute），migrations/005_create_api_routes.sql（新增）
+- 前端：ApiManagement.vue（重写为完整 CRUD），api/index.ts（新增 5 个 API 函数），i18n/en.json + zh.json（新增 15+ keys）
+
+### 功能列表
+- API 路由列表（分页/过滤/搜索）
+- 新增 API 路由（表单弹窗 + 唯一约束校验）
+- 编辑路由元数据（summary/tags/description/enabled）
+- 删除路由（确认弹窗）
+- 同步路由（从 FastAPI 注册路由导入）
+- 启用/禁用开关
+- 来源标识（自动=系统同步 / 手动=用户创建）
+
 ## v0.2.11 - 2026-05-07
 ### 变更内容
 - 书签批量操作：支持多选书签后批量删除

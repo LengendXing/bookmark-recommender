@@ -81,7 +81,22 @@
     "summary": "Description",
     "tags": "Module",
     "all": "All",
-    "authRequired": "Auth Required"
+    "authRequired": "Auth Required",
+    "add": "Add Route",
+    "edit": "Edit Route",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete {method} {path}? This action cannot be undone.",
+    "sync": "Sync Routes",
+    "syncSuccess": "Sync completed",
+    "enabled": "Enabled",
+    "description": "Description",
+    "tagsHint": "Separate tags with commas",
+    "source": "Source",
+    "sourceAuto": "Auto",
+    "sourceManual": "Manual",
+    "enable": "Enable",
+    "disable": "Disable",
+    "noData": "No data, click \"Sync Routes\" to import"
   },
   "common": {
     "cancel": "Cancel",

@@ -73,4 +73,12 @@ export const admin = {
   deleteBookmark: (id: number, code: string) => request.delete(`/admin/bookmark/${id}`, { data: { code } }),
   kickUser: (id: number, code: string) => request.post(`/admin/user/${id}/kick`, { code }),
   apiList: () => request.get('/admin/api-list'),
+  apiRoutes: (params: { page?: number; page_size?: number; method?: string; tag?: string; search?: string } = {}) =>
+    request.get('/admin/api-routes', { params }),
+  apiRouteCreate: (data: { method: string; path: string; summary?: string; tags?: string[]; description?: string; enabled?: boolean }) =>
+    request.post('/admin/api-routes', data),
+  apiRouteUpdate: (id: number, data: { summary?: string; tags?: string[]; description?: string; enabled?: boolean }) =>
+    request.put(`/admin/api-routes/${id}`, data),
+  apiRouteDelete: (id: number) => request.delete(`/admin/api-routes/${id}`),
+  apiRoutesSync: () => request.post('/admin/api-routes/sync'),
 }

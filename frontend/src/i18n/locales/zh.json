@@ -81,7 +81,22 @@
     "summary": "功能描述",
     "tags": "所属模块",
     "all": "全部",
-    "authRequired": "需要认证"
+    "authRequired": "需要认证",
+    "add": "添加路由",
+    "edit": "编辑路由",
+    "delete": "删除",
+    "deleteConfirm": "确定要删除路由 {method} {path} 吗？此操作不可撤销。",
+    "sync": "同步路由",
+    "syncSuccess": "同步完成",
+    "enabled": "启用",
+    "description": "详细描述",
+    "tagsHint": "多个标签用逗号分隔",
+    "source": "来源",
+    "sourceAuto": "自动",
+    "sourceManual": "手动",
+    "enable": "启用",
+    "disable": "禁用",
+    "noData": "暂无数据，请点击「同步路由」导入"
   },
   "common": {
     "cancel": "取消",
