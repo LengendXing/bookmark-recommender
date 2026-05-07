@@ -110,13 +110,12 @@ async def log_push_body(request: Request, call_next):
     response = await call_next(request)
     return response
 
-from app.api import admin, auth, bookmarks, recommend, system_config, collections, github
+from app.api import admin, auth, bookmarks, recommend, system_config, github
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(bookmarks.router, prefix="/api/bookmarks", tags=["bookmarks"])
 app.include_router(recommend.router, prefix="/api/recommend", tags=["recommend"])
 app.include_router(system_config.router, prefix="/api/system-config", tags=["system"])
-app.include_router(collections.router, prefix="/api/collections", tags=["collections"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 app.include_router(github.router, prefix="/api/github", tags=["github"])
 

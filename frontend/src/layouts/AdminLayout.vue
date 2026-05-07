@@ -120,6 +120,7 @@ import {
   LayoutDashboard,
   Bookmark,
   Github,
+  Code2,
   ShieldCheck,
   Cpu,
   Settings,
@@ -140,6 +141,7 @@ const isDark = ref(localStorage.getItem('dark') === 'true')
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'nav.dashboard' },
   { to: '/bookmarks', icon: Bookmark, label: 'nav.bookmarks' },
+  { to: '/api-management', icon: Code2, label: 'nav.apiManagement' },
   { to: '/github', icon: Github, label: 'nav.github' },
   { to: '/audit', icon: ShieldCheck, label: 'nav.audit' },
   { to: '/model', icon: Cpu, label: 'nav.model' },

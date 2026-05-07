@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import func, select
 
 from app.core.database import get_db
@@ -111,3 +111,32 @@ def kick_user(
     db.add(AuditLog(user_id=user.id, action="kick", target_type="user", target_id=user_id))
     db.commit()
     return Response.ok(data={"kicked": user_id})
+
+
+@router.get("/api-list", response_model=Response)
+def api_list(
+    request: Request,
+    user: User = Depends(get_admin_user),
+):
+    """List all registered API routes with metadata."""
+    routes = []
+    skip_prefixes = ("/openapi", "/docs", "/redoc")
+    skip_paths = ("/health",)
+
+    for route in request.app.routes:
+        if not hasattr(route, "methods") or not hasattr(route, "path"):
+            continue
+        path = route.path
+        if path.startswith(skip_prefixes) or path in skip_paths:
+            continue
+        for method in route.methods:
+            if method in ("GET", "POST", "PUT", "DELETE", "PATCH"):
+                routes.append({
+                    "path": path,
+                    "method": method,
+                    "summary": getattr(route, "summary", "") or "",
+                    "tags": list(getattr(route, "tags", [])),
+                })
+
+    routes.sort(key=lambda r: (r["path"], r["method"]))
+    return Response.ok(data={"routes": routes})

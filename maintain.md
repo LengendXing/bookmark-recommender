@@ -1,22 +1,27 @@
 # Bookmark Recommender 维护日志
 
-## v0.2.11 - 2026-05-06
+## v0.2.11 - 2026-05-07
 ### 变更内容
-- 书签批量操作：支持多选书签后批量删除和批量移动到收藏夹
+- 书签批量操作：支持多选书签后批量删除
 - 表格新增复选框列（表头全选/每行单选）
-- 批量操作工具栏（显示已选数量 / 批量删除 / 批量移动 / 取消选择）
-- 批量移动弹窗复用收藏夹列表交互模式
-- 分页/搜索/切换收藏夹自动清空选中状态
-- 后端新增 batch-delete / batch-move 端点（批量所有权校验 + 审计日志）
+- 批量操作工具栏（显示已选数量 / 批量删除 / 取消选择）
+- 分页/搜索自动清空选中状态
+- 表格新增「分类」列（Title 和 Tags 之间，响应式隐藏）
+- 完全移除收藏夹功能：删除 Collection 模型/API/Schema/数据表/前端侧栏/弹窗/i18n
+- 批量移动和移动收藏夹功能同步移除
+- 新增「API管理」页面：展示所有对外 API 端点（请求方式/路径/描述/模块）
+- 后端新增 GET /api/admin/api-list 端点（管理员认证）
+- 数据库迁移：删除 br_bookmarks.collection_id 列，删除 br_collections 表
 
 ### 影响范围
-- 后端：api/bookmarks.py（新增 batch-delete / batch-move 端点），schemas/bookmark.py（新增 BatchDeleteRequest / BatchMoveRequest）
-- 前端：Bookmarks.vue（复选框列 + 批量工具栏 + 批量操作逻辑），api/index.ts（batchDelete / batchMove 函数），i18n/en.json + zh.json（新增 batchDelete / batchMove / batchMoveTo / batchRemoveFromCollection / selectAll / selected / clearSelection / batchDeleteConfirm）
+- 后端：api/admin.py（新增 api-list 端点），api/collections.py（删除），models/collection.py（删除），models/__init__.py（移除 Collection 导入），schemas/collection.py（删除），models/bookmark.py（删除 collection_id），schemas/bookmark.py（删除 BatchMoveRequest/BookmarkMove/collection_id），api/bookmarks.py（删除 batch-move/move 端点及 collection_id 筛选），main.py（移除 collections 路由），migrations/004_remove_collection_id.sql（新增）
+- 前端：Bookmarks.vue（新增分类列/移除收藏夹侧栏/移除收藏夹弹窗/移除批量移动），ApiManagement.vue（新增页面），AdminLayout.vue（新增菜单项），main.ts（新增路由），api/index.ts（移除 collections 导出/新增 apiList），i18n/en.json + zh.json（移除 collections 块/新增 apiManagement 块）
 
 ### 功能列表
 - 书签多选（全选/单选/取消选择）
 - 批量删除（确认弹窗 → API 批量删除 → 自动刷新）
-- 批量移动（选择目标收藏夹 → API 批量移动 → 自动刷新）
+- 书签表格分类列展示
+- API 管理页面（路径/方法/标签过滤 + 端点列表表格）
 - 分页/搜索切换自动清空选中
 
 ## v0.2.10 - 2026-05-06

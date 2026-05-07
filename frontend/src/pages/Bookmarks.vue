@@ -1,52 +1,5 @@
 <template>
-  <div class="flex h-[calc(100vh-4rem)]">
-    <!-- Collections Sidebar -->
-    <aside class="w-56 flex-shrink-0 border-r border-border/50 flex flex-col" style="background-color: hsl(var(--card))">
-      <div class="flex items-center justify-between px-4 py-3 border-b border-border/50">
-        <h3 class="text-sm font-semibold text-muted-foreground">{{ t('collections.title') }}</h3>
-        <button
-          @click="openCollectionCreate"
-          class="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
-        >
-          <Plus class="w-3.5 h-3.5 text-muted-foreground" />
-        </button>
-      </div>
-      <div class="flex-1 overflow-y-auto py-1">
-        <!-- All Bookmarks -->
-        <button
-          @click="selectCollection(null)"
-          class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-muted/50"
-          :class="selectedCollectionId === null ? 'bg-accent/10 text-accent font-medium' : 'text-muted-foreground'"
-        >
-          <Folder class="w-4 h-4 flex-shrink-0" />
-          <span class="truncate">{{ t('collections.allBookmarks') }}</span>
-        </button>
-        <!-- Collection Items -->
-        <button
-          v-for="col in collections"
-          :key="col.id"
-          @click="selectCollection(col.id)"
-          class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-muted/50 group relative"
-          :class="selectedCollectionId === col.id ? 'bg-accent/10 text-accent font-medium' : 'text-muted-foreground'"
-        >
-          <Folder class="w-4 h-4 flex-shrink-0" />
-          <span class="truncate flex-1 text-left">{{ col.name }}</span>
-          <span class="text-xs text-muted-foreground/60">{{ col.bookmark_count }}</span>
-          <!-- Hover Actions -->
-          <div class="hidden group-hover:flex absolute right-2 top-1/2 -translate-y-1/2 gap-0.5 bg-card/90 backdrop-blur rounded-lg px-0.5 py-0.5">
-            <button @click.stop="openCollectionEdit(col)" class="w-5 h-5 flex items-center justify-center rounded hover:bg-muted transition-colors">
-              <Pencil class="w-3 h-3 text-muted-foreground" />
-            </button>
-            <button @click.stop="handleCollectionDelete(col.id)" class="w-5 h-5 flex items-center justify-center rounded hover:bg-destructive/10 transition-colors">
-              <Trash2 class="w-3 h-3 text-destructive/70" />
-            </button>
-          </div>
-        </button>
-      </div>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="flex-1 overflow-auto p-6 lg:p-8">
+  <div class="h-[calc(100vh-4rem)] overflow-auto p-6 lg:p-8">
       <h2 class="text-xl font-semibold tracking-tight mb-6">{{ t('bookmarks.title') }}</h2>
 
       <!-- Toolbar -->
@@ -158,15 +111,7 @@
           <Trash2 class="w-3.5 h-3.5" />
           {{ t('bookmarks.batchDelete') }}
         </button>
-        <button
-          @click="showBatchMoveModal = true"
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
-          style="background-color: hsl(var(--muted) / 0.6); color: hsl(var(--foreground))"
-        >
-          <Folder class="w-3.5 h-3.5" />
-          {{ t('bookmarks.batchMove') }}
-        </button>
-        <button
+<button
           @click="clearSelection"
           class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border/50 hover:bg-muted transition-colors"
         >
@@ -251,93 +196,6 @@
         </div>
       </div>
 
-      <!-- Collection CRUD Modal -->
-      <div
-        v-if="showCollectionModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-        @click.self="closeCollectionModal"
-      >
-        <div class="rounded-2xl p-6 w-full max-w-sm mx-4 shadow-xl" style="background-color: hsl(var(--card))">
-          <h3 class="text-lg font-semibold mb-4">{{ editingCollection ? t('collections.edit') : t('collections.create') }}</h3>
-          <form @submit.prevent="handleCollectionSave" class="space-y-4">
-            <div>
-              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('collections.name') }}</label>
-              <input v-model="collectionForm.name" type="text" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
-            </div>
-            <div>
-              <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('collections.description') }}</label>
-              <input v-model="collectionForm.description" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
-            </div>
-            <div class="flex gap-3 pt-2">
-              <button type="button" @click="closeCollectionModal" class="flex-1 py-2 rounded-xl text-sm font-medium border border-border/50 hover:bg-muted transition-colors">{{ t('common.cancel') }}</button>
-              <button type="submit" :disabled="collectionLoading" class="flex-1 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ collectionLoading ? '...' : t('common.save') }}</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Move to Collection Modal -->
-      <div
-        v-if="showMoveModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-        @click.self="showMoveModal = false"
-      >
-        <div class="rounded-2xl p-6 w-full max-w-xs mx-4 shadow-xl" style="background-color: hsl(var(--card))">
-          <h3 class="text-lg font-semibold mb-4">{{ t('collections.moveTo') }}</h3>
-          <div class="space-y-2 max-h-60 overflow-y-auto">
-            <button
-              @click="handleMoveFromModal(null)"
-              class="w-full text-left px-4 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-3"
-              :class="movingBookmark?.collectionId === null ? 'bg-accent/10 text-accent font-medium' : 'text-muted-foreground hover:bg-muted/50'"
-            >
-              <Folder class="w-4 h-4 flex-shrink-0" />
-              <span>{{ t('collections.noCollection') }}</span>
-            </button>
-            <button
-              v-for="col in collections"
-              :key="col.id"
-              @click="handleMoveFromModal(col.id)"
-              class="w-full text-left px-4 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-3"
-              :class="movingBookmark?.collectionId === col.id ? 'bg-accent/10 text-accent font-medium' : 'text-muted-foreground hover:bg-muted/50'"
-            >
-              <Folder class="w-4 h-4 flex-shrink-0" />
-              <span class="flex-1 truncate">{{ col.name }}</span>
-              <span class="text-xs text-muted-foreground/50">{{ col.bookmark_count }}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Batch Move Modal -->
-      <div
-        v-if="showBatchMoveModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-        @click.self="showBatchMoveModal = false"
-      >
-        <div class="rounded-2xl p-6 w-full max-w-xs mx-4 shadow-xl" style="background-color: hsl(var(--card))">
-          <h3 class="text-lg font-semibold mb-4">{{ t('bookmarks.batchMoveTo') }}</h3>
-          <div class="space-y-2 max-h-60 overflow-y-auto">
-            <button
-              @click="handleBatchMove(null)"
-              class="w-full text-left px-4 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-3 text-muted-foreground hover:bg-muted/50"
-            >
-              <Folder class="w-4 h-4 flex-shrink-0" />
-              <span>{{ t('collections.noCollection') }}</span>
-            </button>
-            <button
-              v-for="col in collections"
-              :key="col.id"
-              @click="handleBatchMove(col.id)"
-              class="w-full text-left px-4 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-3 text-muted-foreground hover:bg-muted/50"
-            >
-              <Folder class="w-4 h-4 flex-shrink-0" />
-              <span class="flex-1 truncate">{{ col.name }}</span>
-              <span class="text-xs text-muted-foreground/50">{{ col.bookmark_count }}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       <!-- Edit Bookmark Modal -->
       <div
         v-if="showEditModal"
@@ -406,6 +264,7 @@
               </th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase" style="width: 4em">#</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase" style="max-width: 8em">Title</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden md:table-cell">{{ t('bookmarks.category') }}</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden md:table-cell">{{ t('bookmarks.tags') }}</th>
               <th v-if="semanticMode" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden sm:table-cell w-20">{{ t('bookmarks.relevance') }}</th>
               <th v-else class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden sm:table-cell w-20">Rating</th>
@@ -422,6 +281,7 @@
                 <button @click="openDrawer(bm.id)" class="font-medium hover:text-accent transition-colors text-left block whitespace-nowrap" :title="bm.title">{{ truncateTitle(bm.title) }}</button>
                 <p class="text-xs text-muted-foreground whitespace-nowrap mt-0.5" :title="bm.description" v-if="bm.description">{{ truncateTitle(bm.description) }}</p>
               </td>
+              <td class="px-4 py-3 hidden md:table-cell text-muted-foreground text-xs">{{ bm.category || '-' }}</td>
               <td class="px-4 py-3 hidden md:table-cell">
                 <div class="flex flex-wrap gap-1 max-w-[160px]">
                   <span v-for="tag in (bm.tags || [])" :key="tag" class="inline-block px-2 py-0.5 rounded-lg text-xs font-medium truncate max-w-[120px]" style="background-color: hsl(var(--accent) / 0.08); color: hsl(var(--accent))">{{ tag }}</span>
@@ -447,14 +307,7 @@
                   style="background-color: hsl(var(--card))"
                   @click.stop
                 >
-                  <button
-                    @click="openMoveModal(bm.id, bm.collection_id); openMenuId = null"
-                    class="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors flex items-center gap-2"
-                  >
-                    <Folder class="w-3.5 h-3.5" />
-                    {{ t('collections.moveTo') }}
-                  </button>
-                  <button
+<button
                     @click="openEditBookmark(bm); openMenuId = null"
                     class="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:bg-muted/50 transition-colors flex items-center gap-2"
                   >
@@ -472,7 +325,7 @@
               </td>
             </tr>
             <tr v-if="!displayItems.length">
-              <td colspan="6" class="px-4 py-16 text-center">
+              <td colspan="7" class="px-4 py-16 text-center">
                 <Bookmark class="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
                 <p class="text-muted-foreground text-sm">No bookmarks yet</p>
               </td>
@@ -544,15 +397,14 @@
         :bookmark="selectedBookmark"
         @close="closeDrawer"
       />
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { bookmarks, collections as collectionsApi, recommend } from '@/api'
-import { Search, Plus, Upload, FileDown, Trash2, Bookmark, Sparkles, Folder, Pencil, MoreVertical } from 'lucide-vue-next'
+import { bookmarks, recommend } from '@/api'
+import { Search, Plus, Upload, FileDown, Trash2, Bookmark, Sparkles, Pencil, MoreVertical } from 'lucide-vue-next'
 import BookmarkDrawer from '@/components/BookmarkDrawer.vue'
 import SkeletonTable from '@/components/SkeletonTable.vue'
 
@@ -576,17 +428,8 @@ const goToPage = () => {
   jumpPage.value = ''
 }
 
-// Collections
-const collections = ref<any[]>([])
-const selectedCollectionId = ref<number | null>(null)
-const showCollectionModal = ref(false)
-const editingCollection = ref<any>(null)
-const collectionLoading = ref(false)
-const collectionForm = ref({ name: '', description: '' })
-
 // Batch selection
 const selectedIds = ref<Set<number>>(new Set())
-const showBatchMoveModal = ref(false)
 
 // Kebab menu
 const openMenuId = ref<number | null>(null)
@@ -634,38 +477,6 @@ const handleBatchDelete = async () => {
   } catch (_) {}
 }
 
-const handleBatchMove = async (colId: number | null) => {
-  const ids = Array.from(selectedIds.value)
-  if (!ids.length) return
-  try {
-    await bookmarks.batchMove(ids, colId)
-    showBatchMoveModal.value = false
-    clearSelection()
-    load()
-    loadCollections()
-  } catch (_) {}
-}
-
-// Move modal
-const showMoveModal = ref(false)
-const movingBookmark = ref<{ id: number; collectionId: number | null } | null>(null)
-
-const openMoveModal = (bookmarkId: number, collectionId: number | null) => {
-  movingBookmark.value = { id: bookmarkId, collectionId }
-  showMoveModal.value = true
-}
-
-const handleMoveFromModal = async (colId: number | null) => {
-  if (!movingBookmark.value) return
-  try {
-    await bookmarks.move(movingBookmark.value.id, colId)
-    showMoveModal.value = false
-    movingBookmark.value = null
-    load()
-    loadCollections()
-  } catch (_) {}
-}
-
 // Edit modal
 const showEditModal = ref(false)
 const editLoading = ref(false)
@@ -701,64 +512,6 @@ const handleEditSave = async () => {
   } catch (_) {} finally {
     editLoading.value = false
   }
-}
-
-const loadCollections = async () => {
-  try {
-    const res = await collectionsApi.list()
-    collections.value = res.data || []
-  } catch (_) {}
-}
-
-const selectCollection = (colId: number | null) => {
-  selectedCollectionId.value = colId
-  page.value = 1
-  clearSelection()
-  load()
-}
-
-const openCollectionCreate = () => {
-  editingCollection.value = null
-  collectionForm.value = { name: '', description: '' }
-  showCollectionModal.value = true
-}
-
-const openCollectionEdit = (col: any) => {
-  editingCollection.value = col
-  collectionForm.value = { name: col.name, description: col.description }
-  showCollectionModal.value = true
-}
-
-const closeCollectionModal = () => {
-  showCollectionModal.value = false
-  editingCollection.value = null
-}
-
-const handleCollectionSave = async () => {
-  collectionLoading.value = true
-  try {
-    if (editingCollection.value) {
-      await collectionsApi.update(editingCollection.value.id, collectionForm.value)
-    } else {
-      await collectionsApi.create(collectionForm.value)
-    }
-    closeCollectionModal()
-    loadCollections()
-  } catch (_) {} finally {
-    collectionLoading.value = false
-  }
-}
-
-const handleCollectionDelete = async (colId: number) => {
-  if (!confirm(t('collections.deleteConfirm'))) return
-  try {
-    await collectionsApi.delete(colId)
-    if (selectedCollectionId.value === colId) {
-      selectedCollectionId.value = null
-    }
-    loadCollections()
-    load()
-  } catch (_) {}
 }
 
 const truncateTitle = (text: string): string => {
@@ -884,9 +637,6 @@ const load = async () => {
   error.value = ''
   try {
     const params: any = { page: page.value, page_size: pageSize.value, search: searchQuery.value }
-    if (selectedCollectionId.value !== null) {
-      params.collection_id = selectedCollectionId.value
-    }
     const res = await bookmarks.list(params)
     items.value = res.data.items
     total.value = res.data.total
@@ -989,7 +739,7 @@ watch(searchMode, () => {
 })
 watch(page, () => { clearSelection(); load() })
 watch(pageSize, () => { page.value = 1; clearSelection(); load() })
-onMounted(() => { load(); loadCollections(); document.addEventListener('click', closeMenu) })
+onMounted(() => { load(); document.addEventListener('click', closeMenu) })
 onUnmounted(() => {
   document.removeEventListener('click', closeMenu)
   if (_pollTimer) clearInterval(_pollTimer)

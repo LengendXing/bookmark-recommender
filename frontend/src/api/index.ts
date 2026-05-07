@@ -7,12 +7,11 @@ export const auth = {
 }
 
 export const bookmarks = {
-  list: (params: { page?: number; page_size?: number; search?: string; collection_id?: number } = {}) => request.get('/bookmarks', { params }),
+  list: (params: { page?: number; page_size?: number; search?: string } = {}) => request.get('/bookmarks', { params }),
   get: (id: number) => request.get(`/bookmarks/${id}`),
   create: (data: { title: string; url: string; description?: string; author?: string; category?: string; tags?: string[] }) => request.post('/bookmarks', data),
   update: (id: number, data: any) => request.put(`/bookmarks/${id}`, data),
   delete: (id: number) => request.delete(`/bookmarks/${id}`),
-  move: (id: number, collectionId: number | null) => request.post(`/bookmarks/${id}/move`, { collection_id: collectionId }),
   ingest: (url: string) => request.post('/bookmarks/ingest', { url }),
   ingestBulk: (urls: string[]) => request.post('/bookmarks/ingest-bulk', { urls }),
   importHtml: (browser: string, file: File) => {
@@ -27,14 +26,6 @@ export const bookmarks = {
   analyzeAll: () => request.post('/bookmarks/analyze-all'),
   analyzeProgress: () => request.get('/bookmarks/analyze-progress'),
   batchDelete: (ids: number[]) => request.post('/bookmarks/batch-delete', { ids }),
-  batchMove: (ids: number[], collectionId: number | null) => request.post('/bookmarks/batch-move', { ids, collection_id: collectionId }),
-}
-
-export const collections = {
-  list: () => request.get('/collections'),
-  create: (data: { name: string; description?: string }) => request.post('/collections', data),
-  update: (id: number, data: { name?: string; description?: string }) => request.put(`/collections/${id}`, data),
-  delete: (id: number) => request.delete(`/collections/${id}`),
 }
 
 export const recommend = {
@@ -81,4 +72,5 @@ export const admin = {
   triggerTrain: (code: string) => request.post('/admin/train', { code }),
   deleteBookmark: (id: number, code: string) => request.delete(`/admin/bookmark/${id}`, { data: { code } }),
   kickUser: (id: number, code: string) => request.post(`/admin/user/${id}/kick`, { code }),
+  apiList: () => request.get('/admin/api-list'),
 }

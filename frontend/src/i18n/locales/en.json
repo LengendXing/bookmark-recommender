@@ -9,6 +9,7 @@
     "audit": "Audit Logs",
     "model": "Model Status",
     "settings": "Settings",
+    "apiManagement": "API Management",
     "logout": "Logout"
   },
   "login": {
@@ -65,29 +66,22 @@
     "folderPath": "Browser Folder",
     "dateAdded": "Date Added",
     "crawlError": "Crawl Error",
-    "moveToCollection": "Move to",
-    "analyzeAll": "AI Analyze All",
+"analyzeAll": "AI Analyze All",
     "batchDelete": "Batch Delete",
     "batchDeleteConfirm": "Are you sure you want to delete {count} selected bookmarks? This cannot be undone.",
-    "batchMove": "Batch Move",
-    "batchMoveTo": "Move to Collection",
-    "batchRemoveFromCollection": "Remove from Collection",
     "selectAll": "Select All",
     "selected": "{count} selected",
     "clearSelection": "Clear Selection"
   },
-  "collections": {
-    "title": "Collections",
-    "allBookmarks": "All Bookmarks",
-    "create": "Create",
-    "edit": "Edit",
-    "name": "Name",
-    "description": "Description",
-    "delete": "Delete",
-    "deleteConfirm": "Deleting a collection won't delete its bookmarks, they'll become unassigned.",
-    "moveTo": "Move to...",
-    "noCollection": "No Collection",
-    "bookmarkCount": "bookmarks"
+  "apiManagement": {
+    "title": "API Management",
+    "search": "Filter paths...",
+    "method": "Method",
+    "path": "Path",
+    "summary": "Description",
+    "tags": "Module",
+    "all": "All",
+    "authRequired": "Auth Required"
   },
   "common": {
     "cancel": "Cancel",

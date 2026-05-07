@@ -44,7 +44,6 @@ class BookmarkOut(BaseModel):
     generated_title: str = ""
     generated_description: str = ""
     crawl_error: str = ""
-    collection_id: int | None = None
 
     model_config = {"from_attributes": True}
 
@@ -67,17 +66,8 @@ class BookmarkPushRequest(BaseModel):
     bookmarks: list[BookmarkPushItem] = Field(min_length=1, max_length=500)
 
 
-class BookmarkMove(BaseModel):
-    collection_id: int | None = None
-
-
 class BatchDeleteRequest(BaseModel):
     ids: list[int] = Field(min_length=1, max_length=200)
-
-
-class BatchMoveRequest(BaseModel):
-    ids: list[int] = Field(min_length=1, max_length=200)
-    collection_id: int | None = None
 
 
 class RecommendRequest(BaseModel):

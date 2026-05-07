@@ -18,7 +18,6 @@ class Bookmark(Base, TimestampMixin):
     rating: Mapped[int] = mapped_column(Integer, default=0)
     metadata_: Mapped[str] = mapped_column("metadata", Text, default="{}")
     user_id: Mapped[int] = mapped_column(Integer, index=True)
-    collection_id: Mapped[int | None] = mapped_column(Integer, index=True, nullable=True)
 
     # Extended fields for AI-powered import
     folder_path: Mapped[str] = mapped_column(String(512), default="")

@@ -9,6 +9,7 @@
     "audit": "审计日志",
     "model": "模型状态",
     "settings": "系统配置",
+    "apiManagement": "API管理",
     "logout": "退出登录"
   },
   "login": {
@@ -65,29 +66,22 @@
     "folderPath": "浏览器文件夹",
     "dateAdded": "添加日期",
     "crawlError": "爬取错误",
-    "moveToCollection": "移动到",
-    "analyzeAll": "一键分析",
+"analyzeAll": "一键分析",
     "batchDelete": "批量删除",
     "batchDeleteConfirm": "确定要删除选中的 {count} 条书签吗？此操作不可撤销。",
-    "batchMove": "批量移动",
-    "batchMoveTo": "移动到收藏夹",
-    "batchRemoveFromCollection": "从收藏夹移除",
     "selectAll": "全选",
     "selected": "已选 {count} 条",
     "clearSelection": "取消选择"
   },
-  "collections": {
-    "title": "收藏夹",
-    "allBookmarks": "全部书签",
-    "create": "新建",
-    "edit": "编辑",
-    "name": "名称",
-    "description": "描述",
-    "delete": "删除",
-    "deleteConfirm": "删除收藏夹不会删除其中的书签，它们将变为无分类。",
-    "moveTo": "移动到...",
-    "noCollection": "无收藏夹",
-    "bookmarkCount": "个书签"
+  "apiManagement": {
+    "title": "API 管理",
+    "search": "过滤路径...",
+    "method": "请求方式",
+    "path": "请求路径",
+    "summary": "功能描述",
+    "tags": "所属模块",
+    "all": "全部",
+    "authRequired": "需要认证"
   },
   "common": {
     "cancel": "取消",
