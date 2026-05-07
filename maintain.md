@@ -18,6 +18,10 @@
 - Vite proxy bypass：排除 `/api-` 前缀前端路由，避免与 `/api` 后端代理冲突
 - i18n 新增 40+ keys（en.json + zh.json），覆盖三级 API 管理全部文案
 - 版本号更新为 0.3.0
+  - 补充：API 调用日志持久化到 `br_api_call_logs`（中间件 fire-and-forget 写入）
+  - 补充：Index.vue 调用详情抽屉（右侧 480px，含请求/响应体）
+  - 补充：API 管理全页面配色归位黑白灰（zinc palette，移除所有彩色）
+  - 补充：i18n 新增 time/client/callDetail/requestBody/responseBody keys
 
 ### 影响范围
 - 后端：models/external_api.py + api_call_log.py（新增），schemas/external_api.py + api_call_log.py（新增），api/external_apis.py + api_stats.py（新增），services/script_executor.py（新增），api/api_routes.py（新增 /stats），main.py（lifespan 动态路由注册 + 版本号），models/__init__.py（导入新模型），migrations/006 + 007（新增）
