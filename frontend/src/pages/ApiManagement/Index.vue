@@ -28,19 +28,20 @@
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-border/40 bg-muted/40">
-              <th class="px-4 py-2 text-left font-medium text-muted-foreground">Time</th>
+              <th class="px-4 py-2 text-left font-medium text-muted-foreground">{{ $t('apiManagement.time') }}</th>
               <th class="px-4 py-2 text-left font-medium text-muted-foreground">{{ $t('apiManagement.method') }}</th>
               <th class="px-4 py-2 text-left font-medium text-muted-foreground">{{ $t('apiManagement.path') }}</th>
               <th class="px-4 py-2 text-left font-medium text-muted-foreground">{{ $t('apiManagement.statusCode') }}</th>
               <th class="px-4 py-2 text-left font-medium text-muted-foreground">{{ $t('apiManagement.duration') }}</th>
-              <th class="px-4 py-2 text-left font-medium text-muted-foreground">Client</th>
+              <th class="px-4 py-2 text-left font-medium text-muted-foreground">{{ $t('apiManagement.client') }}</th>
+              <th class="px-4 py-2 text-center font-medium text-muted-foreground w-16">{{ $t('common.action') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="log in recentCalls" :key="log.id" class="border-b border-border/30 hover:bg-muted/20">
               <td class="px-4 py-2 whitespace-nowrap text-muted-foreground">{{ fmtTime(log.created_at) }}</td>
               <td class="px-4 py-2">
-                <span :class="methodBadgeClass(log.method)" class="px-1.5 py-0.5 rounded text-xs font-medium">
+                <span class="px-1.5 py-0.5 rounded text-xs font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                   {{ log.method }}
                 </span>
               </td>
@@ -50,22 +51,94 @@
                   {{ log.response_status }}
                 </span>
               </td>
-              <td class="px-4 py-2 whitespace-nowrap text-muted-foreground">{{ log.duration_ms.toFixed(1) }}ms</td>
+              <td class="px-4 py-2 whitespace-nowrap text-muted-foreground">{{ log.duration_ms?.toFixed(1) }}ms</td>
               <td class="px-4 py-2 text-muted-foreground">{{ log.client_ip }}</td>
+              <td class="px-4 py-2 text-center">
+                <button @click="openCallDetail(log)" :title="$t('apiManagement.detail')" class="w-7 h-7 flex items-center justify-center rounded hover:bg-muted transition-colors">
+                  <Info class="w-3.5 h-3.5" />
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
+
+    <!-- Call Log Detail Drawer -->
+    <Teleport to="body">
+      <div v-if="detailLog" class="fixed inset-0 z-50 flex justify-end" @click.self="detailLog = null">
+        <div class="absolute inset-0 bg-black/30" @click="detailLog = null" />
+        <div class="relative bg-card border-l border-border/60 shadow-xl w-[480px] h-full overflow-y-auto p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ $t('apiManagement.callDetail') }}</h3>
+            <button @click="detailLog = null" class="w-7 h-7 flex items-center justify-center rounded hover:bg-muted transition-colors">
+              <X class="w-4 h-4" />
+            </button>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs text-muted-foreground block mb-0.5">{{ $t('apiManagement.method') }} + {{ $t('apiManagement.path') }}</label>
+              <p class="text-sm">
+                <span class="px-1.5 py-0.5 rounded text-xs font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 mr-1.5">{{ detailLog.method }}</span>
+                <span class="font-mono text-xs">{{ detailLog.path }}</span>
+              </p>
+            </div>
+            <div>
+              <label class="text-xs text-muted-foreground block mb-0.5">{{ $t('apiManagement.time') }}</label>
+              <p class="text-sm text-muted-foreground">{{ fmtTime(detailLog.created_at) }}</p>
+            </div>
+            <div>
+              <label class="text-xs text-muted-foreground block mb-0.5">{{ $t('apiManagement.statusCode') }}</label>
+              <p class="text-sm">
+                <span :class="statusClass(detailLog.response_status)" class="px-1.5 py-0.5 rounded text-xs font-medium">{{ detailLog.response_status }}</span>
+              </p>
+            </div>
+            <div>
+              <label class="text-xs text-muted-foreground block mb-0.5">{{ $t('apiManagement.duration') }}</label>
+              <p class="text-sm text-muted-foreground">{{ detailLog.duration_ms?.toFixed(1) }}ms</p>
+            </div>
+            <div>
+              <label class="text-xs text-muted-foreground block mb-0.5">{{ $t('apiManagement.client') }}</label>
+              <p class="text-sm text-muted-foreground">{{ detailLog.client_ip }}</p>
+            </div>
+            <div v-if="detailLog.user_id">
+              <label class="text-xs text-muted-foreground block mb-0.5">User ID</label>
+              <p class="text-sm text-muted-foreground">{{ detailLog.user_id }}</p>
+            </div>
+            <div v-if="detailLog.error">
+              <label class="text-xs text-muted-foreground block mb-0.5">Error</label>
+              <p class="text-sm text-red-600 dark:text-red-400">{{ detailLog.error }}</p>
+            </div>
+
+            <!-- Request Body -->
+            <div>
+              <label class="text-xs text-muted-foreground block mb-1">{{ $t('apiManagement.requestBody') }}</label>
+              <pre v-if="detailLog.request_body" class="px-3 py-2 text-xs font-mono rounded-lg border border-border/60 bg-zinc-900 text-zinc-100 overflow-auto max-h-[200px] whitespace-pre-wrap">{{ fmtJson(detailLog.request_body) }}</pre>
+              <p v-else class="text-xs text-muted-foreground">-</p>
+            </div>
+
+            <!-- Response Body -->
+            <div>
+              <label class="text-xs text-muted-foreground block mb-1">{{ $t('apiManagement.responseBody') }}</label>
+              <pre v-if="detailLog.response_body" class="px-3 py-2 text-xs font-mono rounded-lg border border-border/60 bg-zinc-900 text-zinc-100 overflow-auto max-h-[200px] whitespace-pre-wrap">{{ fmtJson(detailLog.response_body) }}</pre>
+              <p v-else class="text-xs text-muted-foreground">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { Info, X } from 'lucide-vue-next'
 import { admin } from '@/api'
 
 const stats = ref({ internal_count: 0, external_count: 0, calls_today: 0 })
 const recentCalls = ref<any[]>([])
+const detailLog = ref<any>(null)
 let timer: ReturnType<typeof setInterval> | null = null
 
 const fetchData = async () => {
@@ -87,22 +160,29 @@ const fmtTime = (ts: string) => {
   try { return new Date(ts).toLocaleString() } catch { return ts }
 }
 
-const methodBadgeClass = (m: string) => {
-  const map: Record<string, string> = {
-    GET: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-    POST: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    PUT: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-    DELETE: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    PATCH: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  }
-  return map[m] || 'bg-muted text-muted-foreground'
+const fmtJson = (raw: string) => {
+  if (!raw) return '-'
+  try { return JSON.stringify(JSON.parse(raw), null, 2) } catch { return raw }
 }
 
 const statusClass = (s: number) => {
-  if (s >= 500) return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-  if (s >= 400) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-  if (s >= 200) return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+  if (s >= 500) return 'bg-zinc-800 text-zinc-100 dark:bg-zinc-300 dark:text-zinc-900'
+  if (s >= 400) return 'bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300'
+  if (s >= 200) return 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800/60 dark:text-zinc-400'
   return 'bg-muted text-muted-foreground'
+}
+
+const openCallDetail = async (log: any) => {
+  try {
+    const res: any = await admin.apiCallLogDetail(log.id)
+    if (res?.data) {
+      detailLog.value = res.data
+    } else {
+      detailLog.value = log
+    }
+  } catch {
+    detailLog.value = log
+  }
 }
 
 onMounted(() => {

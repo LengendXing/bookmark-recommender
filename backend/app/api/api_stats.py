@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from datetime import datetime, timezone
 
@@ -68,3 +68,16 @@ def list_call_logs(
         "page": page,
         "page_size": page_size,
     })
+
+
+@router.get("/api-call-logs/{log_id}", response_model=Response)
+def get_call_log_detail(
+    log_id: int,
+    db=Depends(get_db),
+    user: User = Depends(get_admin_user),
+):
+    result = db.execute(select(ApiCallLog).where(ApiCallLog.id == log_id))
+    log = result.scalar_one_or_none()
+    if log is None:
+        raise HTTPException(status_code=404, detail=Response.error(2002, "Call log not found").model_dump_json())
+    return Response.ok(data=ApiCallLogOut.model_validate(log).model_dump())

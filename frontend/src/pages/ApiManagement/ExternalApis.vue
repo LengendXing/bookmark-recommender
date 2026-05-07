@@ -4,7 +4,7 @@
 
     <!-- Toolbar -->
     <div class="flex items-center gap-3 flex-wrap">
-      <button @click="openCreate" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-accent text-accent-foreground hover:opacity-90 transition-opacity">
+      <button @click="openCreate" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-zinc-800 text-white hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-300 transition-colors">
         <Plus class="w-3.5 h-3.5" /> {{ $t('apiManagement.createExternalApi') }}
       </button>
       <div class="flex items-center gap-2 ml-auto">
@@ -47,12 +47,12 @@
             <td class="px-4 py-2">
               <button
                 @click="toggleEnabled(api)"
-                :class="api.enabled ? 'bg-accent/15 text-accent' : 'bg-muted text-muted-foreground'"
+                :class="api.enabled ? 'bg-zinc-800 text-white dark:bg-zinc-200 dark:text-zinc-900' : 'bg-muted text-muted-foreground'"
                 class="px-2 py-0.5 rounded text-xs font-medium transition-colors"
               >{{ api.enabled ? $t('apiManagement.enable') : $t('apiManagement.disable') }}</button>
             </td>
             <td class="px-4 py-2">
-              <span :class="api.is_native ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-muted text-muted-foreground'" class="px-1.5 py-0.5 rounded text-xs">
+              <span :class="api.is_native ? 'bg-zinc-200 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'" class="px-1.5 py-0.5 rounded text-xs">
                 {{ api.is_native ? $t('apiManagement.nativeEndpoint') : $t('apiManagement.sourceManual') }}
               </span>
             </td>
@@ -120,7 +120,7 @@
           <div>
             <div class="flex items-center justify-between mb-1">
               <label class="text-xs text-muted-foreground">{{ $t('apiManagement.headers') }}</label>
-              <button @click="form.headers.push({key:'',value:'',required:false})" class="text-xs text-accent hover:underline">{{ $t('apiManagement.addHeader') }}</button>
+              <button @click="form.headers.push({key:'',value:'',required:false})" class="text-xs text-muted-foreground hover:text-foreground hover:underline">{{ $t('apiManagement.addHeader') }}</button>
             </div>
             <div v-for="(h, i) in form.headers" :key="'h'+i" class="flex items-center gap-2 mb-1.5">
               <input v-model="h.key" placeholder="Key" class="flex-1 px-2 py-1 text-xs rounded border border-border/60 bg-card" />
@@ -128,7 +128,7 @@
               <label class="flex items-center gap-1 text-xs text-muted-foreground">
                 <input type="checkbox" v-model="h.required" /> {{ $t('apiManagement.required') }}
               </label>
-              <button @click="form.headers.splice(i,1)" class="text-muted-foreground hover:text-destructive">&times;</button>
+              <button @click="form.headers.splice(i,1)" class="text-muted-foreground hover:text-foreground">&times;</button>
             </div>
           </div>
 
@@ -136,7 +136,7 @@
           <div>
             <div class="flex items-center justify-between mb-1">
               <label class="text-xs text-muted-foreground">{{ $t('apiManagement.params') }}</label>
-              <button @click="form.params.push({key:'',type:'string',required:false})" class="text-xs text-accent hover:underline">{{ $t('apiManagement.addParam') }}</button>
+              <button @click="form.params.push({key:'',type:'string',required:false})" class="text-xs text-muted-foreground hover:text-foreground hover:underline">{{ $t('apiManagement.addParam') }}</button>
             </div>
             <div v-for="(p, i) in form.params" :key="'p'+i" class="flex items-center gap-2 mb-1.5">
               <input v-model="p.key" placeholder="Key" class="flex-1 px-2 py-1 text-xs rounded border border-border/60 bg-card" />
@@ -148,7 +148,7 @@
               <label class="flex items-center gap-1 text-xs text-muted-foreground">
                 <input type="checkbox" v-model="p.required" /> {{ $t('apiManagement.required') }}
               </label>
-              <button @click="form.params.splice(i,1)" class="text-muted-foreground hover:text-destructive">&times;</button>
+              <button @click="form.params.splice(i,1)" class="text-muted-foreground hover:text-foreground">&times;</button>
             </div>
           </div>
 
@@ -173,7 +173,7 @@
 
           <div class="flex justify-end gap-2 pt-2">
             <button @click="modalOpen = false" class="px-3 py-1.5 text-sm rounded-lg border border-border/40 hover:bg-muted">{{ $t('common.cancel') }}</button>
-            <button @click="save" :disabled="saving" class="px-3 py-1.5 text-sm rounded-lg bg-accent text-accent-foreground hover:opacity-90 disabled:opacity-50">{{ $t('common.save') }}</button>
+            <button @click="save" :disabled="saving" class="px-3 py-1.5 text-sm rounded-lg bg-zinc-800 text-white hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-300 disabled:opacity-50">{{ $t('common.save') }}</button>
           </div>
         </div>
       </div>
@@ -205,7 +205,7 @@
                   <textarea v-model="testParams" rows="2" class="w-full px-3 py-1 text-xs font-mono rounded-lg border border-border/60 bg-card" placeholder='{"id":"123"}' />
                 </div>
               </div>
-              <button @click="runTest" :disabled="testing" class="mt-3 px-3 py-1.5 text-sm rounded-lg bg-accent text-accent-foreground hover:opacity-90 disabled:opacity-50 self-start">
+              <button @click="runTest" :disabled="testing" class="mt-3 px-3 py-1.5 text-sm rounded-lg bg-zinc-800 text-white hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-300 disabled:opacity-50 self-start">
                 {{ testing ? '...' : $t('apiManagement.testApi') }}
               </button>
             </div>
@@ -232,7 +232,7 @@
           <p class="text-sm">{{ $t('apiManagement.deleteExternalConfirm', { name: deleteTarget.name, method: deleteTarget.method, path: deleteTarget.path }) }}</p>
           <div class="flex justify-end gap-2">
             <button @click="deleteTarget = null" class="px-3 py-1.5 text-sm rounded-lg border border-border/40 hover:bg-muted">{{ $t('common.cancel') }}</button>
-            <button @click="doDelete" :disabled="deleting" class="px-3 py-1.5 text-sm rounded-lg bg-destructive text-destructive-foreground hover:opacity-90 disabled:opacity-50">{{ $t('common.delete') }}</button>
+            <button @click="doDelete" :disabled="deleting" class="px-3 py-1.5 text-sm rounded-lg border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800 disabled:opacity-50">{{ $t('common.delete') }}</button>
           </div>
         </div>
       </div>
@@ -268,13 +268,13 @@
             </div>
             <div>
               <label class="text-xs text-muted-foreground block mb-0.5">{{ $t('apiManagement.enabled') }}</label>
-              <span :class="detailApi.enabled ? 'bg-accent/15 text-accent' : 'bg-muted text-muted-foreground'" class="px-1.5 py-0.5 rounded text-xs font-medium">
+              <span :class="detailApi.enabled ? 'bg-zinc-800 text-white dark:bg-zinc-200 dark:text-zinc-900' : 'bg-muted text-muted-foreground'" class="px-1.5 py-0.5 rounded text-xs font-medium">
                 {{ detailApi.enabled ? $t('apiManagement.enable') : $t('apiManagement.disable') }}
               </span>
             </div>
             <div>
               <label class="text-xs text-muted-foreground block mb-0.5">{{ $t('apiManagement.source') }}</label>
-              <span :class="detailApi.is_native ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-muted text-muted-foreground'" class="px-1.5 py-0.5 rounded text-xs">
+              <span :class="detailApi.is_native ? 'bg-zinc-200 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200' : 'bg-muted text-muted-foreground'" class="px-1.5 py-0.5 rounded text-xs">
                 {{ detailApi.is_native ? $t('apiManagement.nativeEndpoint') : $t('apiManagement.sourceManual') }}
               </span>
             </div>
@@ -286,7 +286,7 @@
                 <div v-for="(h, i) in detailApi.headers" :key="'dh'+i" class="flex items-center gap-2 text-xs">
                   <code class="px-1.5 py-0.5 rounded bg-muted font-mono">{{ h.key }}</code>
                   <span class="text-muted-foreground">{{ h.value }}</span>
-                  <span v-if="h.required" class="text-red-500 text-[10px]">*{{ $t('apiManagement.required') }}</span>
+                  <span v-if="h.required" class="text-muted-foreground text-[10px]">*{{ $t('apiManagement.required') }}</span>
                 </div>
               </div>
               <p v-else class="text-xs text-muted-foreground">-</p>
@@ -299,7 +299,7 @@
                 <div v-for="(p, i) in detailApi.params" :key="'dp'+i" class="flex items-center gap-2 text-xs">
                   <code class="px-1.5 py-0.5 rounded bg-muted font-mono">{{ p.key }}</code>
                   <span class="text-muted-foreground">{{ p.type || 'string' }}</span>
-                  <span v-if="p.required" class="text-red-500 text-[10px]">*{{ $t('apiManagement.required') }}</span>
+                  <span v-if="p.required" class="text-muted-foreground text-[10px]">*{{ $t('apiManagement.required') }}</span>
                 </div>
               </div>
               <p v-else class="text-xs text-muted-foreground">-</p>
@@ -367,16 +367,7 @@ const detailApi = ref<any>(null)
 const deleteTarget = ref<any>(null)
 const deleting = ref(false)
 
-const methodBadge = (m: string) => {
-  const map: Record<string, string> = {
-    GET: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-    POST: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    PUT: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-    DELETE: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    PATCH: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  }
-  return map[m] || 'bg-muted text-muted-foreground'
-}
+const methodBadge = (_m: string) => 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
 
 const load = async () => {
   try {

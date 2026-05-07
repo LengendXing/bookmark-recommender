@@ -131,7 +131,12 @@
     "create": "Create & Register Route",
     "detail": "Detail",
     "createdAt": "Created At",
-    "updatedAt": "Updated At"
+    "updatedAt": "Updated At",
+    "time": "Time",
+    "client": "Client",
+    "callDetail": "Call Detail",
+    "requestBody": "Request Body",
+    "responseBody": "Response Body"
   },
   "common": {
     "cancel": "Cancel",

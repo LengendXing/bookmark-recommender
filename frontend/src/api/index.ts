@@ -85,6 +85,7 @@ export const admin = {
   apiStats: () => request.get('/admin/api-stats'),
   apiCallLogs: (params: { page?: number; page_size?: number; api_id?: number; method?: string } = {}) =>
     request.get('/admin/api-call-logs', { params }),
+  apiCallLogDetail: (id: number) => request.get(`/admin/api-call-logs/${id}`),
   externalApis: (params: { page?: number; page_size?: number; method?: string; search?: string } = {}) =>
     request.get('/admin/external-apis', { params }),
   externalApiGet: (id: number) => request.get(`/admin/external-apis/${id}`),

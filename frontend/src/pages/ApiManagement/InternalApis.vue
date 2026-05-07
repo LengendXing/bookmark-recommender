@@ -13,8 +13,7 @@
           {{ t('apiManagement.sync') }}
         </button>
         <button
-          class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium text-white transition-colors"
-          style="background-color: hsl(217 91% 60%)"
+          class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium text-white transition-colors bg-zinc-800 hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-300"
           @click="openAdd"
         >+ {{ t('apiManagement.add') }}</button>
       </div>
@@ -82,8 +81,7 @@
           >
             <td class="px-4 py-3">
               <span
-                class="inline-block px-2.5 py-0.5 rounded-lg text-xs font-semibold"
-                :style="methodStyle(route.method)"
+                class="inline-block px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
               >{{ route.method }}</span>
             </td>
             <td class="px-4 py-3 font-mono text-xs">{{ route.path }}</td>
@@ -91,7 +89,7 @@
             <td class="px-4 py-3 text-center">
               <span
                 class="inline-block px-2 py-0.5 rounded-lg text-xs"
-                :style="{ backgroundColor: route.source === 'manual' ? 'hsl(45 93% 47% / 0.15)' : 'hsl(var(--muted) / 0.5)', color: route.source === 'manual' ? 'hsl(45 93% 25%)' : 'hsl(var(--muted-foreground))' }"
+                :style="{ backgroundColor: route.source === 'manual' ? 'hsl(240 5% 92%)' : 'hsl(var(--muted) / 0.5)', color: route.source === 'manual' ? 'hsl(240 5% 34%)' : 'hsl(var(--muted-foreground))' }"
               >{{ route.source === 'manual' ? t('apiManagement.sourceManual') : t('apiManagement.sourceAuto') }}</span>
             </td>
             <td class="px-4 py-3 hidden md:table-cell">
@@ -107,7 +105,7 @@
             <td class="px-4 py-3 text-center">
               <button
                 class="w-10 h-5 rounded-full relative transition-colors"
-                :style="{ backgroundColor: route.enabled ? 'hsl(142 76% 36%)' : 'hsl(var(--muted))' }"
+                :style="{ backgroundColor: route.enabled ? 'hsl(240 5% 26%)' : 'hsl(var(--muted))' }"
                 @click="toggleEnabled(route)"
               >
                 <span
@@ -248,8 +246,7 @@
               @click="showDialog = false"
             >{{ t('common.cancel') }}</button>
             <button
-              class="px-4 py-2 rounded-xl text-sm text-white transition-colors"
-              style="background-color: hsl(217 91% 60%)"
+              class="px-4 py-2 rounded-xl text-sm text-white transition-colors bg-zinc-800 hover:bg-zinc-900 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-zinc-300 disabled:opacity-50"
               @click="saveRoute"
               :disabled="saving"
             >{{ t('common.save') }}</button>
@@ -276,8 +273,7 @@
               @click="deleteTarget = null"
             >{{ t('common.cancel') }}</button>
             <button
-              class="px-4 py-2 rounded-xl text-sm text-white transition-colors"
-              style="background-color: hsl(0 72% 51%)"
+              class="px-4 py-2 rounded-xl text-sm transition-colors border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800 disabled:opacity-50"
               @click="doDelete"
               :disabled="deleting"
             >{{ t('apiManagement.delete') }}</button>
@@ -325,18 +321,7 @@ const allTags = computed(() => {
   return Array.from(tags).sort()
 })
 
-const methodColors: Record<string, { bg: string; fg: string }> = {
-  GET:    { bg: 'hsl(142 76% 36%)',     fg: '#fff' },
-  POST:   { bg: 'hsl(217 91% 60%)',     fg: '#fff' },
-  PUT:    { bg: 'hsl(45 93% 47%)',      fg: '#fff' },
-  DELETE: { bg: 'hsl(0 72% 51%)',       fg: '#fff' },
-  PATCH:  { bg: 'hsl(270 60% 50%)',     fg: '#fff' },
-}
-
-const methodStyle = (method: string) => {
-  const c = methodColors[method] || { bg: 'hsl(var(--muted))', fg: 'hsl(var(--foreground))' }
-  return { backgroundColor: c.bg, color: c.fg }
-}
+const methodStyle = (_method: string) => ({})
 
 async function loadPage(p: number) {
   page.value = p

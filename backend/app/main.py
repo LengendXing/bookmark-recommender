@@ -203,6 +203,30 @@ async def request_logger(request: Request, call_next):
 
     log_fn(f"[RES] {method} {path} | {status} | {duration_ms:.0f}ms | client={client_ip} | user={user_id}")
 
+    # Fire-and-forget: write call log to database
+    if not path.startswith(("/health", "/docs", "/redoc", "/openapi", "/static")):
+        try:
+            from app.core.database import SessionLocal
+            from app.models.api_call_log import ApiCallLog
+            db = SessionLocal()
+            log_entry = ApiCallLog(
+                api_id=None,
+                method=method,
+                path=path,
+                request_body=body_str[:4096] if body_str else "",
+                response_status=status,
+                response_body="",
+                duration_ms=round(duration_ms, 2),
+                error="" if status < 400 else f"HTTP {status}",
+                user_id=None if user_id == "anon" else int(user_id) if user_id.isdigit() else None,
+                client_ip=client_ip,
+            )
+            db.add(log_entry)
+            db.commit()
+            db.close()
+        except Exception:
+            pass
+
     return response
 
 from app.api import admin, api_routes, api_stats, auth, bookmarks, external_apis, recommend, system_config, github
@@ -220,4 +244,4 @@ app.include_router(api_stats.router, prefix="/api/admin", tags=["api-stats"])
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "version": "0.2.0"}
+    return {"status": "ok", "version": "0.3.0"}

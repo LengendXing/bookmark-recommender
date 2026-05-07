@@ -131,7 +131,12 @@
     "create": "创建并注册路由",
     "detail": "详情",
     "createdAt": "创建时间",
-    "updatedAt": "更新时间"
+    "updatedAt": "更新时间",
+    "time": "时间",
+    "client": "客户端",
+    "callDetail": "调用详情",
+    "requestBody": "请求体",
+    "responseBody": "响应体"
   },
   "common": {
     "cancel": "取消",

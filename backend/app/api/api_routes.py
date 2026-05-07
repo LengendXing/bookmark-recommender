@@ -102,10 +102,13 @@ def get_stats(
                 "api_id": l.api_id,
                 "method": l.method,
                 "path": l.path,
+                "request_body": l.request_body or "",
                 "response_status": l.response_status,
+                "response_body": l.response_body or "",
                 "duration_ms": l.duration_ms,
-                "error": l.error,
-                "client_ip": l.client_ip,
+                "error": l.error or "",
+                "user_id": l.user_id,
+                "client_ip": l.client_ip or "",
                 "created_at": l.created_at if l.created_at else "",
             }
             for l in recent
