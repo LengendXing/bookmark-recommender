@@ -1,5 +1,37 @@
 # Bookmark Recommender 维护日志
 
+## v0.2.14 - 2026-05-07
+### 变更内容
+- 全链路日志埋点：后端请求/响应日志 + 登录审计日志 + 前端 API 错误日志
+- 后端 `main.py`：新增 `request_logger` 中间件，记录所有请求（method/path/client/body）和响应（status/duration/user_id）
+- 后端 `auth.py`：登录/注册端点新增审计日志（成功/失败 + 用户名 + 客户端 IP）
+- 前端 `request.ts`：错误拦截器新增 `console.error` 输出（method/url/status/data）
+
+### 影响范围
+- 后端：app/main.py（request_logger 中间件），app/api/auth.py（审计日志）
+- 前端：src/api/request.ts（错误日志）
+
+### 功能列表
+- 所有 API 请求自动记录（[REQ]/[RES] 格式）
+- 登录成功/失败审计日志（[AUTH] 格式）
+- 前端 API 错误浏览器控制台输出
+
+## v0.2.13 - 2026-05-07
+### 变更内容
+- 修复登录重定向循环问题：错误拦截器在登录页面触发 401 时强制跳转导致错误信息丢失
+- 后端 `dependencies.py`：错误响应改用 `json.dumps()` 生成合法 JSON（修复 Python f-string 单引号问题）
+- 前端 `request.ts`：新增 `parseErrorCode()` 解析嵌套 detail JSON，增加 `/login` 路径判断避免登录页死循环
+- 前端 `Login.vue`：catch 块支持从嵌套 `detail` JSON 字符串中提取错误消息
+
+### 影响范围
+- 后端：app/core/dependencies.py（错误响应 JSON 格式化）
+- 前端：src/api/request.ts（错误拦截器路径判断 + 错误码解析），src/pages/Login.vue（错误消息提取）
+
+### 功能列表
+- 登录失败时错误消息正确显示在登录页
+- 非登录页 401 自动跳转登录（含 token 清理）
+- 登录页自身 API 返回 401 不再触发页面跳转
+
 ## v0.2.12 - 2026-05-07
 ### 变更内容
 - API 管理页面 CRUD 改造：从只读展示升级为完整增删改查

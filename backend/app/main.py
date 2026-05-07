@@ -147,15 +147,56 @@ app.add_middleware(
 )
 
 
+import time as _time
+
 @app.middleware("http")
-async def log_push_body(request: Request, call_next):
-    if request.url.path.endswith("/push") and request.method == "POST":
-        body = await request.body()
-        logger.info(f"[PUSH REQUEST] Body: {body.decode()[:2000]}")
-        async def receive():
-            return {"type": "http.request", "body": body}
-        request._receive = receive
-    response = await call_next(request)
+async def request_logger(request: Request, call_next):
+    start = _time.time()
+    method = request.method
+    path = request.url.path
+    client_ip = request.client.host if request.client else "unknown"
+
+    # Read body for mutation requests
+    body_str = ""
+    if method in ("POST", "PUT", "PATCH", "DELETE"):
+        try:
+            body_bytes = await request.body()
+            body_str = body_bytes.decode("utf-8", errors="replace")[:4096]
+            async def receive():
+                return {"type": "http.request", "body": body_bytes}
+            request._receive = receive
+        except Exception:
+            body_str = "(unable to read body)"
+
+    # Log request
+    logger.info(f"[REQ] {method} {path} | client={client_ip} | body={body_str}")
+
+    try:
+        response = await call_next(request)
+    except Exception as e:
+        duration_ms = (_time.time() - start) * 1000
+        logger.error(f"[RES] {method} {path} | ERROR | {duration_ms:.0f}ms | client={client_ip} | error={e!r}")
+        raise
+
+    duration_ms = (_time.time() - start) * 1000
+    status = response.status_code
+    level = "ERROR" if status >= 400 else "INFO"
+    log_fn = logger.error if status >= 400 else logger.info
+
+    # Extract user from token if present
+    user_id = "anon"
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.startswith("Bearer "):
+        try:
+            from app.core.security import decode_access_token
+            payload = decode_access_token(auth_header[7:])
+            if payload:
+                user_id = payload.get("sub", "?")
+        except Exception:
+            pass
+
+    log_fn(f"[RES] {method} {path} | {status} | {duration_ms:.0f}ms | client={client_ip} | user={user_id}")
+
     return response
 
 from app.api import admin, api_routes, auth, bookmarks, recommend, system_config, github

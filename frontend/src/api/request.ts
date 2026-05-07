@@ -22,8 +22,13 @@ function parseErrorCode(data: any): number | undefined {
 request.interceptors.response.use(
   (res) => res.data,
   (err) => {
-    const code = parseErrorCode(err.response?.data)
-    if (code === 1001 || err.response?.status === 401) {
+    const status = err.response?.status ?? 0
+    const url = err.config?.url ?? '?'
+    const method = err.config?.method?.toUpperCase() ?? '?'
+    const data = err.response?.data
+    console.error(`[API] ${method} ${url} | ${status} |`, data)
+    const code = parseErrorCode(data)
+    if (code === 1001 || status === 401) {
       if (window.location.pathname !== '/login') {
         localStorage.removeItem('token')
         window.location.href = '/login'
