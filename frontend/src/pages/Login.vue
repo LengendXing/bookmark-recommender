@@ -73,7 +73,12 @@ const handleLogin = async () => {
     authStore.setUser(res.data.user)
     router.push('/dashboard')
   } catch (e: any) {
-    error.value = e.response?.data?.message || 'Login failed'
+    const d = e.response?.data
+    let msg = d?.message
+    if (!msg && d?.detail) {
+      try { const parsed = typeof d.detail === 'string' ? JSON.parse(d.detail) : d.detail; msg = parsed.message } catch (_) {}
+    }
+    error.value = msg || 'Login failed'
   } finally {
     loading.value = false
   }

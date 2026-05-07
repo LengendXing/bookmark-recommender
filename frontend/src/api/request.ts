@@ -11,13 +11,23 @@ request.interceptors.request.use((config) => {
   return config
 })
 
+function parseErrorCode(data: any): number | undefined {
+  if (data?.code) return data.code
+  if (data?.detail) {
+    try { const parsed = typeof data.detail === 'string' ? JSON.parse(data.detail) : data.detail; return parsed.code } catch (_) { /* ignore */ }
+  }
+  return undefined
+}
+
 request.interceptors.response.use(
   (res) => res.data,
   (err) => {
-    const code = err.response?.data?.code
+    const code = parseErrorCode(err.response?.data)
     if (code === 1001 || err.response?.status === 401) {
-      localStorage.removeItem('token')
-      window.location.href = '/login'
+      if (window.location.pathname !== '/login') {
+        localStorage.removeItem('token')
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(err)
   }
