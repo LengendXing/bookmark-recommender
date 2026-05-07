@@ -35,7 +35,7 @@ class LoginRequest(BaseModel):
 class ProfileUpdate(BaseModel):
     nickname: Optional[str] = Field(None, max_length=64)
     avatar_text: Optional[str] = Field(None, max_length=4)
-    current_password: str
+    current_password: Optional[str] = None
     new_password: Optional[str] = Field(None, min_length=6, max_length=128)
 
 
@@ -46,3 +46,7 @@ class MfaConfirm(BaseModel):
 class MfaDisable(BaseModel):
     password: str
     code: str = Field(min_length=6, max_length=6)
+
+
+class VerifyRequest(BaseModel):
+    code: str

@@ -5,12 +5,10 @@
 
     <!-- Modal -->
     <div class="relative w-full max-w-md max-h-[90vh] overflow-auto rounded-2xl shadow-xl p-6 mx-4" style="background-color: hsl(var(--card))">
-      <h2 class="text-lg font-semibold mb-5">{{ t('user.editProfile') }}</h2>
-
-      <!-- Avatar preview -->
+      <!-- Avatar + user info (always visible) -->
       <div class="flex items-center gap-4 mb-5">
         <div
-          class="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold select-none flex-shrink-0"
+          class="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold select-none flex-shrink-0"
           style="background-color: hsl(var(--foreground) / 0.1); color: hsl(var(--foreground))"
         >
           {{ previewAvatarText }}
@@ -21,8 +19,33 @@
         </div>
       </div>
 
-      <!-- Profile form -->
-      <div class="space-y-3 mb-5">
+      <!-- Tab bar -->
+      <div class="flex border-b border-border/30 mb-5">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          @click="activeTab = tab.key"
+          :class="[
+            'flex-1 pb-2.5 text-sm font-medium transition-colors relative',
+            activeTab === tab.key ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+          ]"
+        >
+          <component :is="tab.icon" class="w-3.5 h-3.5 inline mr-1.5" />
+          {{ t(tab.label) }}
+          <div
+            v-if="activeTab === tab.key"
+            class="absolute bottom-0 left-1/4 right-1/4 h-0.5 rounded-full"
+            style="background-color: hsl(var(--foreground) / 0.8)"
+          />
+        </button>
+      </div>
+
+      <!-- Error / Success -->
+      <p v-if="error" class="text-destructive text-xs text-center mb-3">{{ error }}</p>
+      <p v-if="success" class="text-green-600 dark:text-green-400 text-xs text-center mb-3">{{ success }}</p>
+
+      <!-- Tab: Basic Info -->
+      <div v-show="activeTab === 'basic'" class="space-y-3">
         <div>
           <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('user.nickname') }}</label>
           <input
@@ -46,13 +69,30 @@
           />
           <p class="text-xs text-muted-foreground mt-1">{{ t('user.avatarTextDesc') }}</p>
         </div>
+
+        <div class="flex justify-end gap-2 pt-3">
+          <button
+            @click="$emit('close')"
+            class="px-4 py-2 rounded-lg text-sm font-medium border border-border hover:bg-muted transition-colors"
+          >
+            {{ t('common.cancel') }}
+          </button>
+          <button
+            @click="saveBasicInfo"
+            :disabled="profileLoading"
+            class="px-5 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all"
+          >
+            {{ profileLoading ? '...' : t('common.save') }}
+          </button>
+        </div>
       </div>
 
-      <div class="border-t border-border/30 pt-4 mb-5 space-y-3">
+      <!-- Tab: Security -->
+      <div v-show="activeTab === 'security'" class="space-y-3">
         <div>
           <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('user.currentPassword') }}</label>
           <input
-            v-model="form.current_password"
+            v-model="securityForm.current_password"
             type="password"
             class="w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
             style="background-color: hsl(var(--muted) / 0.6)"
@@ -60,46 +100,63 @@
           />
         </div>
         <div>
-          <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('user.newPassword') }} <span class="text-muted-foreground/50">({{ t('user.optional') }})</span></label>
+          <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('user.newPassword') }}</label>
           <input
-            v-model="form.new_password"
+            v-model="securityForm.new_password"
             type="password"
             class="w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
             style="background-color: hsl(var(--muted) / 0.6)"
             :placeholder="t('user.newPassword')"
           />
         </div>
-        <div v-if="form.new_password">
+        <div v-if="securityForm.new_password">
           <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('user.confirmNewPassword') }}</label>
           <input
-            v-model="confirmPassword"
+            v-model="securityForm.confirm_password"
             type="password"
             class="w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
             style="background-color: hsl(var(--muted) / 0.6)"
             :placeholder="t('user.confirmNewPassword')"
           />
         </div>
-      </div>
 
-      <!-- 2FA Section -->
-      <div class="border-t border-border/30 pt-4 mb-5">
-        <h3 class="text-sm font-medium mb-3">{{ t('user.twoFactorAuth') }}</h3>
-
-        <!-- Not enabled, not setting up -->
-        <div v-if="!mfaEnabled && !mfaSettingUp" class="flex items-center justify-between">
-          <span class="text-sm text-muted-foreground">{{ t('user.twoFactorDisabled') }}</span>
+        <div class="flex justify-end gap-2 pt-3">
           <button
-            @click="startMfaSetup"
-            :disabled="mfaLoading"
-            class="px-3 py-1.5 bg-accent text-accent-foreground rounded-lg text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-all"
+            @click="$emit('close')"
+            class="px-4 py-2 rounded-lg text-sm font-medium border border-border hover:bg-muted transition-colors"
           >
-            {{ t('user.enable2FA') }}
+            {{ t('common.cancel') }}
+          </button>
+          <button
+            @click="saveSecurity"
+            :disabled="securityLoading"
+            class="px-5 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all"
+          >
+            {{ securityLoading ? '...' : t('common.save') }}
           </button>
         </div>
+      </div>
 
-        <!-- Setting up MFA -->
+      <!-- Tab: 2FA -->
+      <div v-show="activeTab === '2fa'">
+        <!-- Not enabled -->
+        <template v-if="!mfaEnabled && !mfaSettingUp">
+          <div class="text-center py-4">
+            <ShieldOff class="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
+            <p class="text-sm text-muted-foreground mb-4">{{ t('user.twoFactorDisabled') }}</p>
+            <button
+              @click="startMfaSetup"
+              :disabled="mfaLoading"
+              class="px-4 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all"
+            >
+              {{ t('user.enable2FA') }}
+            </button>
+          </div>
+        </template>
+
+        <!-- Setting up -->
         <div v-if="mfaSettingUp" class="space-y-3">
-          <p class="text-sm text-muted-foreground">{{ t('user.scanQRCode') }}</p>
+          <p class="text-sm text-muted-foreground text-center">{{ t('user.scanQRCode') }}</p>
           <div class="flex justify-center">
             <canvas ref="qrCanvas" class="rounded-lg" width="180" height="180" />
           </div>
@@ -134,19 +191,18 @@
 
         <!-- Enabled -->
         <div v-if="mfaEnabled" class="space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-green-600 dark:text-green-400 font-medium flex items-center gap-1.5">
-              <ShieldCheck class="w-4 h-4" />{{ t('user.twoFactorEnabled') }}
-            </span>
+          <div class="text-center py-2">
+            <ShieldCheck class="w-10 h-10 mx-auto mb-3 text-green-600 dark:text-green-400" />
+            <p class="text-sm text-green-600 dark:text-green-400 font-medium mb-4">{{ t('user.twoFactorEnabled') }}</p>
             <button
+              v-if="!showDisableMfa"
               @click="showDisableMfa = true"
-              class="px-3 py-1.5 rounded-lg text-xs font-medium border border-border hover:bg-muted transition-colors text-destructive"
+              class="px-4 py-2 rounded-lg text-sm font-medium border border-border hover:bg-muted transition-colors text-destructive"
             >
               {{ t('user.disable2FA') }}
             </button>
           </div>
 
-          <!-- Disable form -->
           <div v-if="showDisableMfa" class="space-y-2 pt-2">
             <input
               v-model="disablePassword"
@@ -181,27 +237,15 @@
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- Error -->
-      <p v-if="error" class="text-destructive text-xs text-center mb-3">{{ error }}</p>
-      <p v-if="success" class="text-green-600 dark:text-green-400 text-xs text-center mb-3">{{ success }}</p>
-
-      <!-- Actions -->
-      <div class="flex justify-end gap-2 pt-2 border-t border-border/30">
-        <button
-          @click="$emit('close')"
-          class="px-4 py-2 rounded-lg text-sm font-medium border border-border hover:bg-muted transition-colors"
-        >
-          {{ t('common.cancel') }}
-        </button>
-        <button
-          @click="saveProfile"
-          :disabled="profileLoading"
-          class="px-5 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all"
-        >
-          {{ profileLoading ? '...' : t('common.save') }}
-        </button>
+        <div class="flex justify-end pt-3">
+          <button
+            @click="$emit('close')"
+            class="px-4 py-2 rounded-lg text-sm font-medium border border-border hover:bg-muted transition-colors"
+          >
+            {{ mfaEnabled ? t('common.close') : t('common.cancel') }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -212,24 +256,31 @@ import { ref, computed, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { auth } from '@/api'
-import { ShieldCheck } from 'lucide-vue-next'
+import { ShieldCheck, ShieldOff, User, Lock } from 'lucide-vue-next'
 
 defineEmits<{ close: [] }>()
 
 const { t } = useI18n()
 const authStore = useAuthStore()
 
-// Profile form
+const activeTab = ref<'basic' | 'security' | '2fa'>('basic')
+const tabs = [
+  { key: 'basic' as const, icon: User, label: 'user.basicInfo' },
+  { key: 'security' as const, icon: Lock, label: 'user.securityInfo' },
+  { key: '2fa' as const, icon: ShieldCheck, label: 'user.twoFactorAuth' },
+]
+
+watch(activeTab, () => {
+  error.value = ''
+  success.value = ''
+})
+
+// --- Basic info ---
 const form = ref({
   nickname: authStore.user?.nickname || '',
   avatar_text: authStore.user?.avatar_text || '',
-  current_password: '',
-  new_password: '',
 })
-const confirmPassword = ref('')
 const profileLoading = ref(false)
-const error = ref('')
-const success = ref('')
 
 const previewAvatarText = computed(() => {
   if (form.value.avatar_text) return form.value.avatar_text.slice(0, 4)
@@ -237,8 +288,74 @@ const previewAvatarText = computed(() => {
   return authStore.avatarText
 })
 
-// MFA state
-const mfaEnabled = ref(authStore.user?.mfa_enabled || false)
+async function saveBasicInfo() {
+  profileLoading.value = true
+  error.value = ''
+  try {
+    const data: any = {}
+    if (form.value.nickname !== (authStore.user?.nickname || '')) {
+      data.nickname = form.value.nickname
+    }
+    if (form.value.avatar_text !== (authStore.user?.avatar_text || '')) {
+      data.avatar_text = form.value.avatar_text
+    }
+    // No changes
+    if (Object.keys(data).length === 0) {
+      success.value = t('user.profileSaved')
+      return
+    }
+    const res = await auth.profile(data)
+    authStore.setUser(res.data)
+    success.value = t('user.profileSaved')
+    setTimeout(() => { success.value = '' }, 3000)
+  } catch (e: any) {
+    error.value = parseError(e)
+  } finally {
+    profileLoading.value = false
+  }
+}
+
+// --- Security ---
+const securityForm = ref({
+  current_password: '',
+  new_password: '',
+  confirm_password: '',
+})
+const securityLoading = ref(false)
+
+async function saveSecurity() {
+  securityLoading.value = true
+  error.value = ''
+  try {
+    if (!securityForm.value.current_password) {
+      error.value = t('user.currentPassword') + ' ' + t('common.required')
+      securityLoading.value = false
+      return
+    }
+    if (securityForm.value.new_password && securityForm.value.new_password !== securityForm.value.confirm_password) {
+      error.value = t('user.passwordMismatch')
+      securityLoading.value = false
+      return
+    }
+    const data: any = {
+      current_password: securityForm.value.current_password,
+    }
+    if (securityForm.value.new_password) {
+      data.new_password = securityForm.value.new_password
+    }
+    await auth.profile(data)
+    securityForm.value = { current_password: '', new_password: '', confirm_password: '' }
+    success.value = t('user.profileSaved')
+    setTimeout(() => { success.value = '' }, 3000)
+  } catch (e: any) {
+    error.value = parseError(e)
+  } finally {
+    securityLoading.value = false
+  }
+}
+
+// --- 2FA (unchanged logic) ---
+const mfaEnabled = computed(() => authStore.user?.mfa_enabled || false)
 const mfaSettingUp = ref(false)
 const mfaLoading = ref(false)
 const mfaCode = ref('')
@@ -249,13 +366,16 @@ const disablePassword = ref('')
 const disableCode = ref('')
 const qrCanvas = ref<HTMLCanvasElement | null>(null)
 
+const error = ref('')
+const success = ref('')
+
 async function drawQr() {
   await nextTick()
   if (!qrCanvas.value || !mfaProvisioningUri.value) return
   try {
     const QRCode = (await import('qrcode')).default
     QRCode.toCanvas(qrCanvas.value, mfaProvisioningUri.value, { width: 180, margin: 2 })
-  } catch (_) { /* qrcode not loaded */ }
+  } catch (e) { console.error('Failed to render QR code:', e) }
 }
 
 async function startMfaSetup() {
@@ -279,7 +399,6 @@ async function confirmMfa() {
   error.value = ''
   try {
     await auth.mfaConfirm(mfaCode.value)
-    mfaEnabled.value = true
     mfaSettingUp.value = false
     mfaCode.value = ''
     mfaSecret.value = ''
@@ -308,7 +427,6 @@ async function disableMfa() {
   error.value = ''
   try {
     await auth.mfaDisable(disablePassword.value, disableCode.value)
-    mfaEnabled.value = false
     showDisableMfa.value = false
     disablePassword.value = ''
     disableCode.value = ''
@@ -321,41 +439,6 @@ async function disableMfa() {
     error.value = parseError(e)
   } finally {
     mfaLoading.value = false
-  }
-}
-
-async function saveProfile() {
-  profileLoading.value = true
-  error.value = ''
-  try {
-    if (form.value.new_password && form.value.new_password !== confirmPassword.value) {
-      error.value = t('user.passwordMismatch')
-      profileLoading.value = false
-      return
-    }
-    const data: any = {
-      current_password: form.value.current_password,
-    }
-    if (form.value.nickname !== (authStore.user?.nickname || '')) {
-      data.nickname = form.value.nickname
-    }
-    if (form.value.avatar_text !== (authStore.user?.avatar_text || '')) {
-      data.avatar_text = form.value.avatar_text
-    }
-    if (form.value.new_password) {
-      data.new_password = form.value.new_password
-    }
-    const res = await auth.profile(data)
-    authStore.setUser(res.data)
-    success.value = t('user.profileSaved')
-    setTimeout(() => { success.value = '' }, 3000)
-    form.value.current_password = ''
-    form.value.new_password = ''
-    confirmPassword.value = ''
-  } catch (e: any) {
-    error.value = parseError(e)
-  } finally {
-    profileLoading.value = false
   }
 }
 

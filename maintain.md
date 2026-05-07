@@ -1,5 +1,18 @@
 # Bookmark Recommender 维护日志
 
+## v0.3.2 - 2026-05-07
+### 变更内容
+- 修复 EditProfileModal 2FA 状态持久化 bug：`mfaEnabled` 从 `ref` 改为 `computed`（关闭弹窗重开后正确显示已启用/未启用状态）
+- 修复 2FA 已启用时底部按钮文案：显示「关闭」替代「取消」
+- i18n 新增 common.close key
+
+### 影响范围
+- 前端：EditProfileModal.vue（mfaEnabled ref→computed），i18n en.json/zh.json（新增 common.close）
+
+### 功能列表
+- 2FA 启用后关闭弹窗再打开，正确显示「已启用」
+- 2FA 已启用状态底部按钮显示「关闭」而非「取消」
+
 ## v0.3.1 - 2026-05-07
 ### 变更内容
 - 用户中心：Header 右上角文字头像（用户名首字母）+ 下拉菜单（修改信息 / 退出登录）
@@ -28,6 +41,12 @@
 - 两步验证（TOTP QR 码扫描 → 验证 → 启用 / 禁用）
 - 登录 MFA 流程（密码验证 → MFA 验证码 → 进入系统）
 - MFA 临时 token（5 分钟有效期，scope:mfa）
+- 修复：缺失 VerifyRequest Schema 导致 uvicorn reload 失败，2FA 端点无法加载（"启用两步验证"按钮无反应）
+- 修复：EditProfileModal drawQr() 静默吞错误改为 console.error 输出
+- UX 优化：EditProfileModal tab bar 三栏设计（基础信息/安全信息/两步验证），各自独立保存互不依赖
+- UX 优化：修改基础信息（昵称/头像文字）不再需要输入密码，修改密码才需验证当前密码
+- 修复：切换 tab 时自动清除错误/成功提示，避免残留跨 tab 污染
+- 修复：i18n 新增 common.required key（中：不能为空 / 英：Required），修复安全信息校验提示原样显示问题
 
 ## v0.3.0 - 2026-05-07
 ### 变更内容

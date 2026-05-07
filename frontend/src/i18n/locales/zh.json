@@ -142,7 +142,9 @@
   },
   "common": {
     "cancel": "取消",
+    "close": "关闭",
     "save": "保存",
+    "required": "不能为空",
     "delete": "删除",
     "actions": "操作",
     "action": "操作"
@@ -202,6 +204,8 @@
     "scanQRCode": "使用认证器应用扫描二维码",
     "enterCodeVerify": "输入验证码",
     "verify": "验证",
+    "basicInfo": "基础信息",
+    "securityInfo": "安全信息",
     "profileSaved": "资料已更新",
     "mfaEnabledSuccess": "两步验证已启用",
     "mfaDisabledSuccess": "两步验证已禁用",

@@ -142,7 +142,9 @@
   },
   "common": {
     "cancel": "Cancel",
+    "close": "Close",
     "save": "Save",
+    "required": "Required",
     "delete": "Delete",
     "actions": "Actions",
     "action": "Actions"
@@ -202,6 +204,8 @@
     "scanQRCode": "Scan QR code with your authenticator app",
     "enterCodeVerify": "Enter verification code",
     "verify": "Verify",
+    "basicInfo": "Basic Info",
+    "securityInfo": "Security",
     "profileSaved": "Profile updated",
     "mfaEnabledSuccess": "2FA enabled successfully",
     "mfaDisabledSuccess": "2FA disabled successfully",

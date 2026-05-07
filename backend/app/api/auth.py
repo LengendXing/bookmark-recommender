@@ -91,8 +91,10 @@ async def me(user: User = Depends(get_current_user)):
 
 @router.put("/profile", response_model=Response)
 def update_profile(body: ProfileUpdate, user: User = Depends(get_current_user), db = Depends(get_db)):
-    if not verify_password(body.current_password, user.password_hash):
-        raise HTTPException(status_code=400, detail=Response.error(ERROR_BAD_REQUEST, "Current password is incorrect").model_dump_json())
+    # Only verify password if current_password is provided or new_password is being set
+    if body.new_password or body.current_password:
+        if not body.current_password or not verify_password(body.current_password, user.password_hash):
+            raise HTTPException(status_code=400, detail=Response.error(ERROR_BAD_REQUEST, "Current password is incorrect").model_dump_json())
 
     if body.nickname is not None:
         user.nickname = body.nickname
