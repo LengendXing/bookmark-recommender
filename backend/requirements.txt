@@ -13,3 +13,4 @@ sentence-transformers
 beautifulsoup4
 httpx
 structlog
+pyotp>=2.9.0

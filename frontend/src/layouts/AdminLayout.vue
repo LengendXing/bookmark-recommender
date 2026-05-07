@@ -84,17 +84,6 @@
         </template>
       </nav>
 
-      <!-- Logout -->
-      <div class="pt-2 border-t border-border/50 px-3 pb-5 mt-2">
-        <button
-          @click="handleLogout"
-          :title="$t('nav.logout')"
-          class="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors duration-150 overflow-hidden whitespace-nowrap"
-        >
-          <LogOut class="w-4 h-4 flex-shrink-0" />
-          <span>{{ $t('nav.logout') }}</span>
-        </button>
-      </div>
     </aside>
 
     <!-- Main area -->
@@ -110,6 +99,35 @@
         </button>
 
         <div class="flex items-center gap-1.5">
+          <!-- User avatar + dropdown -->
+          <div class="relative mr-1">
+            <button
+              @click="showDropdown = !showDropdown"
+              class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-opacity hover:opacity-80 select-none"
+              style="background-color: hsl(var(--foreground) / 0.1); color: hsl(var(--foreground))"
+              :title="authStore.displayName"
+            >
+              {{ authStore.avatarText }}
+            </button>
+            <div v-if="showDropdown" class="fixed inset-0 z-30" @click="showDropdown = false" />
+            <div v-if="showDropdown"
+              class="absolute right-0 top-full mt-2 w-44 rounded-xl shadow-lg border border-border/50 py-1.5 z-40"
+              style="background-color: hsl(var(--card))"
+            >
+              <button
+                @click="showEditProfile = true; showDropdown = false"
+                class="w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2"
+              >
+                <UserCog class="w-4 h-4" />{{ $t('user.editProfile') }}
+              </button>
+              <button
+                @click="handleLogout"
+                class="w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2 text-destructive"
+              >
+                <LogOut class="w-4 h-4" />{{ $t('nav.logout') }}
+              </button>
+            </div>
+          </div>
           <!-- Locale toggle -->
           <div class="flex items-center rounded-lg bg-muted/50 p-0.5 mr-2">
             <button
@@ -139,6 +157,9 @@
         <slot />
       </div>
     </main>
+
+    <!-- Edit profile modal -->
+    <EditProfileModal v-if="showEditProfile" @close="showEditProfile = false" />
   </div>
 </template>
 
@@ -165,9 +186,13 @@ import {
   Route,
   ExternalLink,
   ChevronDown,
+  UserCog,
 } from 'lucide-vue-next'
+import EditProfileModal from '@/components/EditProfileModal.vue'
 
 const sidebarOpen = ref(true)
+const showDropdown = ref(false)
+const showEditProfile = ref(false)
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()

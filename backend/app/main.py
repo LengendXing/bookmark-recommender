@@ -124,6 +124,27 @@ async def _daily_recommendations():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    # 兼容旧数据库，添加缺失列
+    try:
+        from sqlalchemy import inspect, text
+        from app.core.database import engine
+        inspector = inspect(engine)
+        existing = [c['name'] for c in inspector.get_columns('br_users')]
+        new_cols = {
+            'nickname': 'TEXT',
+            'avatar_text': 'TEXT',
+            'mfa_secret': 'TEXT',
+            'mfa_enabled': 'BOOLEAN DEFAULT 0',
+        }
+        for col, ct in new_cols.items():
+            if col not in existing:
+                with engine.connect() as conn:
+                    conn.execute(text(f"ALTER TABLE br_users ADD COLUMN {col} {ct}"))
+                    conn.commit()
+                logger.info(f"[DB] Added column br_users.{col}")
+    except Exception as e:
+        logger.warning(f"[DB] Column migration skipped: {e}")
+
     _sync_api_routes(app)
     try:
         from app.api.external_apis import register_all_external_routes, seed_native_endpoints

@@ -1,5 +1,34 @@
 # Bookmark Recommender 维护日志
 
+## v0.3.1 - 2026-05-07
+### 变更内容
+- 用户中心：Header 右上角文字头像（用户名首字母）+ 下拉菜单（修改信息 / 退出登录）
+- 修改信息弹窗（EditProfileModal）：头像预览 + 昵称/头像文字输入 + 密码修改
+- TOTP 两步验证（2FA）：pyotp 后端生成密钥 + 前端 QR 码扫描 + 登录 MFA 流程
+- 后端 User 模型扩展 4 字段：nickname / avatar_text / mfa_secret / mfa_enabled
+- 后端 auth API 重构：登录 MFA 流程（/verify 端点）+ /profile 端点 + /mfa/setup /confirm /disable /status
+- 后端 security.py 新增 create_mfa_token / verify_mfa_token（5 分钟有效期 MFA JWT）
+- 后端 main.py lifespan 兼容旧数据库自动加列（ALTER TABLE）
+- 前端 auth store 扩展：UserInfo 接口 / mfaToken / mfaRequired / displayName / avatarText
+- 前端 API 层新增：verify / profile / mfaSetup / mfaConfirm / mfaDisable / mfaStatus
+- 前端 Login 页面 MFA 适配：登录检测 requires_mfa → 6 位验证码输入 → /verify
+- 前端新增 qrcode 依赖（QR 码 canvas 渲染）
+- 侧栏移除退出登录按钮，退出移入 Header 头像下拉
+- i18n 新增 user 块 18 keys + login 新增 mfaPrompt/verifyCode（en/zh）
+- 版本号更新为 0.3.1
+
+### 影响范围
+- 后端：models/user.py（4 字段），schemas/user.py（ProfileUpdate/MfaConfirm/MfaDisable），core/security.py（MFA token），api/auth.py（重构为完整登录 MFA + profile + MFA CRUD），main.py（lifespan 兼容加列），requirements.txt（pyotp）
+- 前端：layouts/AdminLayout.vue（头像+下拉菜单，移除侧栏退出），components/EditProfileModal.vue（新建），pages/Login.vue（MFA 登录流），stores/auth.ts（UserInfo + MFA 状态），api/index.ts（新增 6 端点），i18n/en.json + zh.json（user 块 + login 新 key），package.json（qrcode），types/qrcode.d.ts（类型声明）
+
+### 功能列表
+- 文字头像（首字母 / 自定义文字，最多 4 字符）
+- 头像下拉菜单（修改信息 / 退出登录，点击外部关闭）
+- 修改信息弹窗（头像实时预览 / 昵称 / 头像文字 / 密码修改）
+- 两步验证（TOTP QR 码扫描 → 验证 → 启用 / 禁用）
+- 登录 MFA 流程（密码验证 → MFA 验证码 → 进入系统）
+- MFA 临时 token（5 分钟有效期，scope:mfa）
+
 ## v0.3.0 - 2026-05-07
 ### 变更内容
 - API 管理三级结构重构：主面板（统计+调用日志）+ 内部接口（FastAPI 路由 CRUD）+ 外部接口（Python 脚本端点）

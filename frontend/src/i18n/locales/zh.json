@@ -20,7 +20,9 @@
     "username": "用户名",
     "password": "密码",
     "submit": "登录",
-    "noAccount": "还没有账号？注册"
+    "noAccount": "还没有账号？注册",
+    "mfaPrompt": "此账号已启用两步验证，请输入认证器应用中的验证码。",
+    "verifyCode": "验证码"
   },
   "dashboard": {
     "title": "数据概览",
@@ -181,6 +183,29 @@
     "testFailed": "连接失败",
     "tokens": "Token 用量",
     "response": "模型响应"
+  },
+  "user": {
+    "editProfile": "修改信息",
+    "nickname": "昵称",
+    "avatarText": "头像文字",
+    "avatarTextHint": "最多 4 个字符",
+    "avatarTextDesc": "作为文字头像显示，最多 4 个字符",
+    "currentPassword": "当前密码",
+    "newPassword": "新密码",
+    "confirmNewPassword": "确认新密码",
+    "optional": "可选",
+    "twoFactorAuth": "两步验证 (2FA)",
+    "enable2FA": "启用两步验证",
+    "disable2FA": "禁用两步验证",
+    "twoFactorEnabled": "已启用",
+    "twoFactorDisabled": "未启用",
+    "scanQRCode": "使用认证器应用扫描二维码",
+    "enterCodeVerify": "输入验证码",
+    "verify": "验证",
+    "profileSaved": "资料已更新",
+    "mfaEnabledSuccess": "两步验证已启用",
+    "mfaDisabledSuccess": "两步验证已禁用",
+    "passwordMismatch": "两次密码不一致"
   },
   "github": {
     "title": "开源项目管理",

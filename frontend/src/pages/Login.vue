@@ -8,7 +8,45 @@
         <h2 class="text-xl font-semibold tracking-tight">{{ t('login.title') }}</h2>
       </div>
 
-      <form @submit.prevent="handleLogin" class="space-y-5">
+      <!-- MFA step -->
+      <form v-if="showMfa" @submit.prevent="handleVerify" class="space-y-5">
+        <p class="text-sm text-muted-foreground text-center">{{ t('login.mfaPrompt') }}</p>
+        <div>
+          <label class="text-xs font-medium text-muted-foreground mb-1.5 block tracking-wide uppercase">{{ t('login.verifyCode') }}</label>
+          <input
+            v-model="mfaCode"
+            type="text"
+            maxlength="6"
+            class="w-full px-3.5 py-2.5 rounded-xl text-sm text-center tracking-[0.5em] transition-all duration-200 placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent/30"
+            style="background-color: hsl(var(--muted) / 0.6)"
+            placeholder="000000"
+            required
+            autocomplete="one-time-code"
+            @input="mfaCode = mfaCode.replace(/\D/g, '').slice(0, 6)"
+          />
+        </div>
+
+        <p v-if="error" class="text-destructive text-xs text-center font-medium">{{ error }}</p>
+
+        <button
+          type="submit"
+          :disabled="loading || mfaCode.length !== 6"
+          class="w-full py-2.5 bg-accent text-accent-foreground rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+        >
+          {{ loading ? '...' : t('user.verify') }}
+        </button>
+
+        <button
+          type="button"
+          @click="showMfa = false; mfaCode = ''; error = ''"
+          class="w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {{ t('common.cancel') }}
+        </button>
+      </form>
+
+      <!-- Password step -->
+      <form v-else @submit.prevent="handleLogin" class="space-y-5">
         <div>
           <label class="text-xs font-medium text-muted-foreground mb-1.5 block tracking-wide uppercase">{{ t('login.username') }}</label>
           <input
@@ -64,23 +102,52 @@ const form = ref({ username: '', password: '' })
 const error = ref('')
 const loading = ref(false)
 
+// MFA state
+const showMfa = ref(false)
+const mfaCode = ref('')
+
 const handleLogin = async () => {
   loading.value = true
   error.value = ''
   try {
     const res = await auth.login(form.value)
-    authStore.setToken(res.data.token)
-    authStore.setUser(res.data.user)
-    router.push('/dashboard')
-  } catch (e: any) {
-    const d = e.response?.data
-    let msg = d?.message
-    if (!msg && d?.detail) {
-      try { const parsed = typeof d.detail === 'string' ? JSON.parse(d.detail) : d.detail; msg = parsed.message } catch (_) {}
+    if (res.data.requires_mfa) {
+      authStore.setMfaToken(res.data.mfa_token)
+      showMfa.value = true
+    } else {
+      authStore.setToken(res.data.token)
+      authStore.setUser(res.data.user)
+      router.push('/dashboard')
     }
-    error.value = msg || 'Login failed'
+  } catch (e: any) {
+    error.value = parseError(e)
   } finally {
     loading.value = false
   }
+}
+
+const handleVerify = async () => {
+  loading.value = true
+  error.value = ''
+  try {
+    const res = await auth.verify(authStore.mfaToken, mfaCode.value)
+    authStore.setToken(res.data.token)
+    authStore.setUser(res.data.user)
+    authStore.clearMfa()
+    router.push('/dashboard')
+  } catch (e: any) {
+    error.value = parseError(e)
+  } finally {
+    loading.value = false
+  }
+}
+
+function parseError(e: any): string {
+  const d = e.response?.data
+  let msg = d?.message
+  if (!msg && d?.detail) {
+    try { const parsed = typeof d.detail === 'string' ? JSON.parse(d.detail) : d.detail; msg = parsed.message } catch (_) {}
+  }
+  return msg || 'Login failed'
 }
 </script>

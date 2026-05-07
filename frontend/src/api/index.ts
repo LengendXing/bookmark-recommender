@@ -4,6 +4,13 @@ export const auth = {
   register: (data: { username: string; email: string; password: string }) => request.post('/auth/register', data),
   login: (data: { username: string; password: string }) => request.post('/auth/login', data),
   me: () => request.get('/auth/me'),
+  verify: (mfaToken: string, code: string) => request.post('/auth/verify', { mfa_token: mfaToken, code }),
+  profile: (data: { nickname?: string; avatar_text?: string; current_password: string; new_password?: string }) =>
+    request.put('/auth/profile', data),
+  mfaSetup: () => request.post('/auth/mfa/setup'),
+  mfaConfirm: (code: string) => request.post('/auth/mfa/confirm', { code }),
+  mfaDisable: (password: string, code: string) => request.post('/auth/mfa/disable', { password, code }),
+  mfaStatus: () => request.get('/auth/mfa/status'),
 }
 
 export const bookmarks = {

@@ -20,7 +20,9 @@
     "username": "Username",
     "password": "Password",
     "submit": "Login",
-    "noAccount": "No account? Register"
+    "noAccount": "No account? Register",
+    "mfaPrompt": "This account has two-factor authentication enabled. Enter the verification code from your authenticator app.",
+    "verifyCode": "Verification Code"
   },
   "dashboard": {
     "title": "Overview",
@@ -181,6 +183,29 @@
     "testFailed": "Connection Failed",
     "tokens": "Token Usage",
     "response": "Model Response"
+  },
+  "user": {
+    "editProfile": "Edit Profile",
+    "nickname": "Nickname",
+    "avatarText": "Avatar Text",
+    "avatarTextHint": "Up to 4 characters",
+    "avatarTextDesc": "Displayed as text avatar, up to 4 characters",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "optional": "optional",
+    "twoFactorAuth": "Two-Factor Authentication (2FA)",
+    "enable2FA": "Enable 2FA",
+    "disable2FA": "Disable 2FA",
+    "twoFactorEnabled": "Enabled",
+    "twoFactorDisabled": "Not enabled",
+    "scanQRCode": "Scan QR code with your authenticator app",
+    "enterCodeVerify": "Enter verification code",
+    "verify": "Verify",
+    "profileSaved": "Profile updated",
+    "mfaEnabledSuccess": "2FA enabled successfully",
+    "mfaDisabledSuccess": "2FA disabled successfully",
+    "passwordMismatch": "Passwords do not match"
   },
   "github": {
     "title": "Open Source Projects",

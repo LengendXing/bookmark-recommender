@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -8,8 +10,8 @@ class UserCreate(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    email: str | None = None
-    is_active: bool | None = None
+    email: Optional[str] = None
+    is_active: Optional[bool] = None
 
 
 class UserOut(BaseModel):
@@ -17,6 +19,9 @@ class UserOut(BaseModel):
     username: str
     email: str
     is_active: bool
+    nickname: Optional[str] = None
+    avatar_text: Optional[str] = None
+    mfa_enabled: bool = False
     created_at: str
 
     model_config = {"from_attributes": True}
@@ -27,5 +32,17 @@ class LoginRequest(BaseModel):
     password: str
 
 
-class VerifyRequest(BaseModel):
-    code: str = Field(min_length=4, max_length=12)
+class ProfileUpdate(BaseModel):
+    nickname: Optional[str] = Field(None, max_length=64)
+    avatar_text: Optional[str] = Field(None, max_length=4)
+    current_password: str
+    new_password: Optional[str] = Field(None, min_length=6, max_length=128)
+
+
+class MfaConfirm(BaseModel):
+    code: str = Field(min_length=6, max_length=6)
+
+
+class MfaDisable(BaseModel):
+    password: str
+    code: str = Field(min_length=6, max_length=6)

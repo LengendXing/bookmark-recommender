@@ -36,3 +36,14 @@ def decode_access_token(token: str) -> Optional[dict]:
         return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
     except JWTError:
         return None
+
+
+def create_mfa_token(user_id: int) -> str:
+    return create_access_token({"sub": str(user_id), "scope": "mfa"}, timedelta(minutes=5))
+
+
+def verify_mfa_token(token: str) -> Optional[int]:
+    payload = decode_access_token(token)
+    if payload is None or payload.get("scope") != "mfa":
+        return None
+    return int(payload["sub"])
