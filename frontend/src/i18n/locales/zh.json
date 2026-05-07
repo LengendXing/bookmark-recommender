@@ -128,12 +128,17 @@
     "required": "必填",
     "type": "类型",
     "createExternalApi": "新建外部接口",
-    "create": "创建并注册路由"
+    "create": "创建并注册路由",
+    "detail": "详情",
+    "createdAt": "创建时间",
+    "updatedAt": "更新时间"
   },
   "common": {
     "cancel": "取消",
     "save": "保存",
-    "delete": "删除"
+    "delete": "删除",
+    "actions": "操作",
+    "action": "操作"
   },
   "pagination": {
     "perPage": "每页条数",

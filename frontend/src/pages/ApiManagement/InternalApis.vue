@@ -68,10 +68,10 @@
             <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase w-24">{{ t('apiManagement.method') }}</th>
             <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase">{{ t('apiManagement.path') }}</th>
             <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase">{{ t('apiManagement.summary') }}</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground tracking-wide uppercase w-20">{{ t('apiManagement.source') }}</th>
             <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase hidden md:table-cell w-28">{{ t('apiManagement.tags') }}</th>
             <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground tracking-wide uppercase w-16">{{ t('apiManagement.enabled') }}</th>
-            <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground tracking-wide uppercase w-20">{{ t('apiManagement.source') }}</th>
-            <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground tracking-wide uppercase w-24">{{ t('common.save') }}</th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground tracking-wide uppercase w-20">{{ t('common.action') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -88,6 +88,12 @@
             </td>
             <td class="px-4 py-3 font-mono text-xs">{{ route.path }}</td>
             <td class="px-4 py-3 text-muted-foreground text-xs">{{ route.summary }}</td>
+            <td class="px-4 py-3 text-center">
+              <span
+                class="inline-block px-2 py-0.5 rounded-lg text-xs"
+                :style="{ backgroundColor: route.source === 'manual' ? 'hsl(45 93% 47% / 0.15)' : 'hsl(var(--muted) / 0.5)', color: route.source === 'manual' ? 'hsl(45 93% 25%)' : 'hsl(var(--muted-foreground))' }"
+              >{{ route.source === 'manual' ? t('apiManagement.sourceManual') : t('apiManagement.sourceAuto') }}</span>
+            </td>
             <td class="px-4 py-3 hidden md:table-cell">
               <div class="flex flex-wrap gap-1">
                 <span
@@ -111,21 +117,13 @@
               </button>
             </td>
             <td class="px-4 py-3 text-center">
-              <span
-                class="inline-block px-2 py-0.5 rounded-lg text-xs"
-                :style="{ backgroundColor: route.source === 'manual' ? 'hsl(45 93% 47% / 0.15)' : 'hsl(var(--muted) / 0.5)', color: route.source === 'manual' ? 'hsl(45 93% 25%)' : 'hsl(var(--muted-foreground))' }"
-              >{{ route.source === 'manual' ? t('apiManagement.sourceManual') : t('apiManagement.sourceAuto') }}</span>
-            </td>
-            <td class="px-4 py-3 text-right">
-              <div class="flex items-center justify-end gap-1">
-                <button
-                  class="px-2.5 py-1 rounded-lg text-xs hover:bg-muted/50 transition-colors"
-                  @click="openEdit(route)"
-                >{{ t('common.save') }}</button>
-                <button
-                  class="px-2.5 py-1 rounded-lg text-xs text-red-500 hover:bg-red-50 transition-colors"
-                  @click="confirmDelete(route)"
-                >{{ t('apiManagement.delete') }}</button>
+              <div class="flex items-center justify-center gap-1">
+                <button @click="openEdit(route)" class="w-7 h-7 flex items-center justify-center rounded hover:bg-muted transition-colors" :title="t('apiManagement.edit')">
+                  <Pencil class="w-3.5 h-3.5" />
+                </button>
+                <button @click="confirmDelete(route)" class="w-7 h-7 flex items-center justify-center rounded hover:bg-destructive/10 hover:text-destructive transition-colors" :title="t('apiManagement.delete')">
+                  <Trash class="w-3.5 h-3.5" />
+                </button>
               </div>
             </td>
           </tr>
@@ -293,6 +291,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { Pencil, Trash } from 'lucide-vue-next'
 import { admin } from '@/api'
 
 const { t } = useI18n()

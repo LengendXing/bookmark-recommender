@@ -30,7 +30,7 @@
             <th class="px-4 py-2 text-left font-medium text-muted-foreground">{{ $t('apiManagement.description') }}</th>
             <th class="px-4 py-2 text-left font-medium text-muted-foreground">{{ $t('apiManagement.enabled') }}</th>
             <th class="px-4 py-2 text-left font-medium text-muted-foreground">{{ $t('apiManagement.source') }}</th>
-            <th class="px-4 py-2 text-left font-medium text-muted-foreground">{{ $t('common.actions') }}</th>
+            <th class="px-4 py-2 text-left font-medium text-muted-foreground">{{ $t('common.action') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -58,7 +58,10 @@
             </td>
             <td class="px-4 py-2">
               <div class="flex items-center gap-1">
-                <button @click="openEdit(api)" :disabled="api.is_native && !api.script" :title="api.is_native ? $t('apiManagement.edit') : $t('apiManagement.edit')" class="w-7 h-7 flex items-center justify-center rounded hover:bg-muted transition-colors disabled:opacity-30">
+                <button @click="openDetail(api)" :title="$t('apiManagement.detail')" class="w-7 h-7 flex items-center justify-center rounded hover:bg-muted transition-colors">
+                  <Info class="w-3.5 h-3.5" />
+                </button>
+                <button @click="openEdit(api)" :disabled="api.is_native && !api.script" :title="$t('apiManagement.edit')" class="w-7 h-7 flex items-center justify-center rounded hover:bg-muted transition-colors disabled:opacity-30">
                   <Pencil class="w-3.5 h-3.5" />
                 </button>
                 <button v-if="api.script" @click="openTest(api)" :title="$t('apiManagement.testApi')" class="w-7 h-7 flex items-center justify-center rounded hover:bg-muted transition-colors">
@@ -234,13 +237,103 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Detail Drawer -->
+    <Teleport to="body">
+      <div v-if="detailApi" class="fixed inset-0 z-50 flex justify-end" @click.self="detailApi = null">
+        <div class="absolute inset-0 bg-black/30" @click="detailApi = null" />
+        <div class="relative bg-card border-l border-border/60 shadow-xl w-[480px] h-full overflow-y-auto p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-semibold">{{ $t('apiManagement.detail') }}</h3>
+            <button @click="detailApi = null" class="w-7 h-7 flex items-center justify-center rounded hover:bg-muted transition-colors">
+              <X class="w-4 h-4" />
+            </button>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs text-muted-foreground block mb-0.5">{{ $t('apiManagement.name') }}</label>
+              <p class="text-sm">{{ detailApi.name }}</p>
+            </div>
+            <div>
+              <label class="text-xs text-muted-foreground block mb-0.5">{{ $t('apiManagement.method') }} + {{ $t('apiManagement.path') }}</label>
+              <p class="text-sm">
+                <span :class="methodBadge(detailApi.method)" class="px-1.5 py-0.5 rounded text-xs font-medium mr-1.5">{{ detailApi.method }}</span>
+                <span class="font-mono text-xs">{{ detailApi.path }}</span>
+              </p>
+            </div>
+            <div>
+              <label class="text-xs text-muted-foreground block mb-0.5">{{ $t('apiManagement.description') }}</label>
+              <p class="text-sm text-muted-foreground">{{ detailApi.description || '-' }}</p>
+            </div>
+            <div>
+              <label class="text-xs text-muted-foreground block mb-0.5">{{ $t('apiManagement.enabled') }}</label>
+              <span :class="detailApi.enabled ? 'bg-accent/15 text-accent' : 'bg-muted text-muted-foreground'" class="px-1.5 py-0.5 rounded text-xs font-medium">
+                {{ detailApi.enabled ? $t('apiManagement.enable') : $t('apiManagement.disable') }}
+              </span>
+            </div>
+            <div>
+              <label class="text-xs text-muted-foreground block mb-0.5">{{ $t('apiManagement.source') }}</label>
+              <span :class="detailApi.is_native ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-muted text-muted-foreground'" class="px-1.5 py-0.5 rounded text-xs">
+                {{ detailApi.is_native ? $t('apiManagement.nativeEndpoint') : $t('apiManagement.sourceManual') }}
+              </span>
+            </div>
+
+            <!-- Headers -->
+            <div>
+              <label class="text-xs text-muted-foreground block mb-1">{{ $t('apiManagement.headers') }}</label>
+              <div v-if="detailApi.headers && detailApi.headers.length" class="space-y-1">
+                <div v-for="(h, i) in detailApi.headers" :key="'dh'+i" class="flex items-center gap-2 text-xs">
+                  <code class="px-1.5 py-0.5 rounded bg-muted font-mono">{{ h.key }}</code>
+                  <span class="text-muted-foreground">{{ h.value }}</span>
+                  <span v-if="h.required" class="text-red-500 text-[10px]">*{{ $t('apiManagement.required') }}</span>
+                </div>
+              </div>
+              <p v-else class="text-xs text-muted-foreground">-</p>
+            </div>
+
+            <!-- Params -->
+            <div>
+              <label class="text-xs text-muted-foreground block mb-1">{{ $t('apiManagement.params') }}</label>
+              <div v-if="detailApi.params && detailApi.params.length" class="space-y-1">
+                <div v-for="(p, i) in detailApi.params" :key="'dp'+i" class="flex items-center gap-2 text-xs">
+                  <code class="px-1.5 py-0.5 rounded bg-muted font-mono">{{ p.key }}</code>
+                  <span class="text-muted-foreground">{{ p.type || 'string' }}</span>
+                  <span v-if="p.required" class="text-red-500 text-[10px]">*{{ $t('apiManagement.required') }}</span>
+                </div>
+              </div>
+              <p v-else class="text-xs text-muted-foreground">-</p>
+            </div>
+
+            <!-- Script -->
+            <div>
+              <label class="text-xs text-muted-foreground block mb-1">{{ $t('apiManagement.script') }}</label>
+              <pre v-if="detailApi.script" class="px-3 py-2 text-xs font-mono rounded-lg border border-border/60 bg-[#1e1e2e] text-[#cdd6f4] overflow-auto max-h-[200px] whitespace-pre-wrap">{{ detailApi.script }}</pre>
+              <p v-else class="text-xs text-muted-foreground">-</p>
+            </div>
+
+            <!-- Timestamps -->
+            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-border/40">
+              <div>
+                <label class="text-xs text-muted-foreground block mb-0.5">{{ $t('apiManagement.createdAt') }}</label>
+                <p class="text-xs text-muted-foreground">{{ detailApi.created_at ? new Date(detailApi.created_at).toLocaleString() : '-' }}</p>
+              </div>
+              <div>
+                <label class="text-xs text-muted-foreground block mb-0.5">{{ $t('apiManagement.updatedAt') }}</label>
+                <p class="text-xs text-muted-foreground">{{ detailApi.updated_at ? new Date(detailApi.updated_at).toLocaleString() : '-' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { admin } from '@/api'
-import { Plus, Pencil, Play, Trash } from 'lucide-vue-next'
+import { Plus, Pencil, Play, Trash, Info, X } from 'lucide-vue-next'
 
 const methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
 
@@ -268,6 +361,8 @@ const testParams = ref('')
 const testing = ref(false)
 const testResult = ref('')
 const testDuration = ref<number | null>(null)
+
+const detailApi = ref<any>(null)
 
 const deleteTarget = ref<any>(null)
 const deleting = ref(false)
@@ -346,6 +441,10 @@ const toggleEnabled = async (api: any) => {
     await admin.externalApiUpdate(api.id, { enabled: !api.enabled })
     api.enabled = !api.enabled
   } catch (_) { /* ignore */ }
+}
+
+const openDetail = (api: any) => {
+  detailApi.value = api
 }
 
 const openTest = (api: any) => {

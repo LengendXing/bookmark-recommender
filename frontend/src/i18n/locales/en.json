@@ -128,12 +128,17 @@
     "required": "Required",
     "type": "Type",
     "createExternalApi": "New External API",
-    "create": "Create & Register Route"
+    "create": "Create & Register Route",
+    "detail": "Detail",
+    "createdAt": "Created At",
+    "updatedAt": "Updated At"
   },
   "common": {
     "cancel": "Cancel",
     "save": "Save",
-    "delete": "Delete"
+    "delete": "Delete",
+    "actions": "Actions",
+    "action": "Actions"
   },
   "pagination": {
     "perPage": "Per page",
