@@ -9,6 +9,9 @@ import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +228,7 @@ async def request_logger(request: Request, call_next):
     log_fn(f"[RES] {method} {path} | {status} | {duration_ms:.0f}ms | client={client_ip} | user={user_id}")
 
     # Fire-and-forget: write call log to database
-    if not path.startswith(("/health", "/docs", "/redoc", "/openapi", "/static")):
+    if not path.startswith(("/health", "/docs", "/redoc", "/openapi", "/static", "/assets")):
         try:
             from app.core.database import SessionLocal
             from app.models.api_call_log import ApiCallLog
@@ -265,4 +268,18 @@ app.include_router(api_stats.router, prefix="/api/admin", tags=["api-stats"])
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "version": "0.3.0"}
+    return {"status": "ok", "version": "0.3.2"}
+
+
+# --- Static frontend serving (production) ---
+_static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "dist")
+_is_prod = os.path.isdir(_static_dir)
+if _is_prod:
+    app.mount("/assets", StaticFiles(directory=os.path.join(_static_dir, "assets")), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        index_path = os.path.join(_static_dir, "index.html")
+        if os.path.isfile(index_path):
+            return FileResponse(index_path)
+        return {"status": "ok", "version": "0.3.2"}
