@@ -42,7 +42,7 @@
           <div
             v-if="item.children"
             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150 overflow-hidden whitespace-nowrap cursor-pointer"
-            :class="isActive(item.to) ? 'bg-accent/10 text-accent font-medium' : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'"
+            :class="isActive(item.to) ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-bold shadow-sm' : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'"
             @click="toggleMenu(item.to)"
             :title="$t(item.label)"
           >
@@ -53,7 +53,6 @@
               class="w-3.5 h-3.5 ml-auto flex-shrink-0 transition-transform duration-200"
               :class="{ 'rotate-180': expandedMenus.includes(item.to) }"
             />
-            <div v-if="isActive(item.to)" class="w-1 h-4 rounded-full bg-accent flex-shrink-0" />
           </div>
 
           <!-- Child items -->
@@ -64,7 +63,7 @@
               :to="child.to"
               :title="$t(child.label)"
               class="flex items-center gap-3 pl-9 pr-3 py-1.5 rounded-lg text-xs transition-colors duration-150 overflow-hidden whitespace-nowrap"
-              :class="route.path === child.to ? 'text-accent font-medium' : 'text-muted-foreground hover:text-foreground'"
+              :class="route.path === child.to ? 'text-zinc-900 dark:text-zinc-100 font-bold' : 'text-muted-foreground hover:text-foreground'"
             >
               <component :is="child.icon" class="w-3.5 h-3.5 flex-shrink-0" />
               <span>{{ $t(child.label) }}</span>
@@ -77,11 +76,10 @@
             :to="item.to"
             :title="$t(item.label)"
             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150 overflow-hidden whitespace-nowrap"
-            :class="isActive(item.to) ? 'bg-accent/10 text-accent font-medium' : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'"
+            :class="isActive(item.to) ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-bold shadow-sm' : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'"
           >
             <component :is="item.icon" class="w-4 h-4 flex-shrink-0" />
             <span>{{ $t(item.label) }}</span>
-            <div v-if="isActive(item.to)" class="ml-auto w-1 h-4 rounded-full bg-accent flex-shrink-0" />
           </router-link>
         </template>
       </nav>

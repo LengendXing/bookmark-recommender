@@ -18,13 +18,13 @@
           :class="[
             'flex items-center gap-2.5 px-4 py-2 mx-1 rounded-lg cursor-pointer transition-colors text-sm',
             activeAccountId === acc.id
-              ? 'bg-accent/10 text-accent font-medium'
+              ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-medium'
               : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
           ]"
         >
           <img v-if="acc.avatar_url" :src="acc.avatar_url" class="w-5 h-5 rounded-full flex-shrink-0" />
           <span v-else class="w-5 h-5 rounded-full bg-muted flex-shrink-0" />
-          <span class="truncate">{{ acc.github_login }}</span>
+          <span class="truncate text-purple-600 dark:text-purple-400">{{ acc.github_login }}</span>
           <button
             @click.stop="confirmDeleteAccount(acc)"
             class="ml-auto w-5 h-5 flex items-center justify-center rounded opacity-0 hover:opacity-100 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
@@ -44,7 +44,7 @@
         :class="[
           'px-4 py-2 text-sm border-b',
           notify.type === 'error' ? 'bg-destructive/10 text-destructive border-destructive/20' :
-          notify.type === 'info' ? 'bg-accent/10 text-accent border-accent/20' :
+          notify.type === 'info' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700' :
           'bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800'
         ]"
       >{{ notify.msg }}</div>
@@ -58,7 +58,7 @@
           :class="[
             'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px',
             activeTab === tab.key
-              ? 'border-accent text-accent'
+              ? 'border-foreground text-foreground'
               : 'border-transparent text-muted-foreground hover:text-foreground'
           ]"
         >{{ tab.label }}</button>
@@ -73,7 +73,7 @@
           <button
             @click="doAnalyze"
             :disabled="analyzeRunning"
-            class="h-8 px-3 mr-3 text-xs font-medium rounded-lg bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+            class="h-8 px-3 mr-3 text-xs font-medium rounded-lg bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hover:opacity-90 transition-opacity disabled:opacity-50"
           >{{ analyzeRunning ? '...' : $t('github.analyze') }}</button>
         </template>
       </div>
@@ -165,7 +165,7 @@
                 <td class="px-4 py-2.5 text-sm">
                   <button
                     @click="openDrawer(repo.id)"
-                    class="text-accent hover:underline text-left"
+                    class="text-foreground hover:underline text-left"
                   >{{ truncateTitle(repo.repo_name) }}</button>
                   <div class="text-[10px] text-muted-foreground">{{ repo.owner }}</div>
                 </td>
@@ -177,7 +177,7 @@
                   <span v-else class="text-muted-foreground">-</span>
                 </td>
                 <td class="px-4 py-2.5 text-xs hidden lg:table-cell">
-                  <span v-if="repo.ai_summary" class="text-accent/80" :title="repo.ai_summary">{{ truncateSummary(repo.ai_summary) }}</span>
+                  <span v-if="repo.ai_summary" class="text-muted-foreground" :title="repo.ai_summary">{{ truncateSummary(repo.ai_summary) }}</span>
                   <span v-else class="text-muted-foreground/50 text-[11px]">{{ $t('github.notAnalyzed') }}</span>
                 </td>
                 <td class="px-4 py-2.5 text-sm text-right">{{ repo.stars.toLocaleString() }}</td>
@@ -215,7 +215,7 @@
                 :key="rec.id"
                 :class="[
                   'border-b border-border/20 hover:bg-muted/20 transition-colors',
-                  !rec.is_read ? 'bg-accent/5' : ''
+                  !rec.is_read ? 'bg-zinc-100/50 dark:bg-zinc-800/30' : ''
                 ]"
               >
                 <td class="px-4 py-2.5 text-xs text-muted-foreground">{{ (recPage - 1) * recPageSize + idx + 1 }}</td>
@@ -223,7 +223,7 @@
                   <a
                     :href="`https://github.com/${rec.repo_full_name}`"
                     target="_blank"
-                    class="text-accent hover:underline"
+                    class="text-blue-600 dark:text-blue-400 hover:underline"
                   >{{ truncateTitle(rec.repo_name) }}</a>
                   <div class="text-[10px] text-muted-foreground">{{ rec.owner }}</div>
                 </td>
@@ -236,7 +236,7 @@
                   </div>
                 </td>
                 <td class="px-4 py-2.5 text-sm text-right">{{ rec.stars.toLocaleString() }}</td>
-                <td class="px-4 py-2.5 text-sm text-right text-accent font-medium">{{ rec.score.toFixed(1) }}</td>
+                <td class="px-4 py-2.5 text-sm text-right text-foreground font-medium">{{ rec.score.toFixed(1) }}</td>
               </tr>
             </tbody>
           </table>
@@ -309,14 +309,14 @@
               @click="addTab = 'oauth'"
               :class="[
                 'flex-1 py-2 text-sm font-medium rounded-lg transition-colors',
-                addTab === 'oauth' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                addTab === 'oauth' ? 'bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               ]"
             >{{ $t('github.oauthTab') }}</button>
             <button
               @click="addTab = 'token'"
               :class="[
                 'flex-1 py-2 text-sm font-medium rounded-lg transition-colors',
-                addTab === 'token' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                addTab === 'token' ? 'bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               ]"
             >{{ $t('github.tokenTab') }}</button>
           </div>
@@ -344,7 +344,7 @@
             <div v-if="addError" class="text-sm text-destructive bg-destructive/5 rounded-lg px-3 py-2">{{ addError }}</div>
             <div class="flex justify-end gap-2 pt-2">
               <button @click="showAddModal = false" class="h-9 px-4 text-sm font-medium rounded-lg border border-input bg-card hover:bg-muted">{{ $t('common.cancel') }}</button>
-              <button @click="doAddAccount" :disabled="!newToken.trim() || adding" class="h-9 px-4 text-sm font-medium rounded-lg bg-accent text-accent-foreground hover:opacity-90 disabled:opacity-40">{{ adding ? '...' : $t('github.save') }}</button>
+              <button @click="doAddAccount" :disabled="!newToken.trim() || adding" class="h-9 px-4 text-sm font-medium rounded-lg bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hover:opacity-90 disabled:opacity-40">{{ adding ? '...' : $t('github.save') }}</button>
             </div>
           </div>
         </div>
@@ -401,7 +401,7 @@
           <div class="w-full bg-muted rounded-full h-2 mb-3 overflow-hidden">
             <div
               class="h-full rounded-full transition-all duration-300"
-              :class="progress.done ? 'bg-green-500' : 'bg-accent'"
+              :class="progress.done ? 'bg-zinc-700 dark:bg-zinc-300' : 'bg-foreground'"
               :style="{ width: progress.pct + '%' }"
             />
           </div>
@@ -411,7 +411,7 @@
           <button
             v-if="progress.done"
             @click="progress.show = false"
-            class="w-full h-9 text-sm font-medium rounded-lg bg-accent text-accent-foreground hover:opacity-90"
+            class="w-full h-9 text-sm font-medium rounded-lg bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hover:opacity-90"
           >{{ $t('common.cancel') }}</button>
         </div>
       </div>

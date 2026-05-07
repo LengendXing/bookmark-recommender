@@ -18,8 +18,8 @@
       <!-- Bookmarks -->
       <div class="rounded-xl p-5 transition-all duration-200 hover:shadow-md cursor-default" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)">
         <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-            <Bookmark class="w-5 h-5 text-accent" />
+          <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+            <Bookmark class="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
           </div>
           <p class="text-sm text-muted-foreground font-medium">{{ t('dashboard.bookmarks') }}</p>
         </div>
@@ -29,8 +29,8 @@
       <!-- Users -->
       <div class="rounded-xl p-5 transition-all duration-200 hover:shadow-md cursor-default" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)">
         <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
-            <Users class="w-5 h-5 text-success" />
+          <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+            <Users class="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
           </div>
           <p class="text-sm text-muted-foreground font-medium">{{ t('dashboard.users') }}</p>
         </div>
@@ -51,8 +51,8 @@
       <!-- Model -->
       <div class="rounded-xl p-5 transition-all duration-200 hover:shadow-md cursor-default" style="background-color: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)">
         <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-            <Cpu class="w-5 h-5 text-accent" />
+          <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+            <Cpu class="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
           </div>
           <p class="text-sm text-muted-foreground font-medium">{{ t('dashboard.model') }}</p>
         </div>

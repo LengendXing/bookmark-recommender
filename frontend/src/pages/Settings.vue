@@ -32,7 +32,7 @@
             v-model="form.api_endpoint"
             type="url"
             :placeholder="'https://api.openai.com/v1'"
-            class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all"
+            class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30 transition-all"
             style="background-color: hsl(var(--muted) / 0.6)"
           />
         </div>
@@ -42,7 +42,7 @@
             v-model="form.api_key"
             type="password"
             placeholder="sk-..."
-            class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all"
+            class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30 transition-all"
             style="background-color: hsl(var(--muted) / 0.6)"
           />
         </div>
@@ -50,7 +50,7 @@
           <label class="text-xs font-medium text-muted-foreground mb-1.5 block">{{ t('settings.apiProvider') }}</label>
           <select
             v-model="form.api_provider"
-            class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all"
+            class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30 transition-all"
             style="background-color: hsl(var(--muted) / 0.6)"
           >
             <option value="openai">{{ t('settings.providerOpenAI') }}</option>
@@ -63,17 +63,17 @@
             v-model="form.ai_model"
             type="text"
             :placeholder="form.api_provider === 'anthropic' ? 'claude-sonnet-4-6-20250514' : 'gpt-4o'"
-            class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all"
+            class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30 transition-all"
             style="background-color: hsl(var(--muted) / 0.6)"
           />
         </div>
 
-        <p v-if="statusMsg" class="text-xs" :class="statusOk ? 'text-emerald-500' : 'text-destructive'">{{ statusMsg }}</p>
+        <p v-if="statusMsg" class="text-xs" :class="statusOk ? 'text-foreground' : 'text-destructive'">{{ statusMsg }}</p>
 
         <button
           type="submit"
           :disabled="loading"
-          class="w-full py-2.5 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all"
+          class="w-full py-2.5 bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900 rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all"
         >
           {{ loading ? '...' : t('settings.save') }}
         </button>
@@ -90,7 +90,7 @@
           <label class="text-xs font-medium text-muted-foreground mb-1.5 block">{{ t('settings.selectModel') }}</label>
           <select
             v-model="testModel"
-            class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all"
+            class="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30 transition-all"
             style="background-color: hsl(var(--muted) / 0.6)"
             @focus="fetchModels"
           >
@@ -100,8 +100,8 @@
         </div>
 
         <!-- Test Result -->
-        <div v-if="testResult" :class="testResult.success ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'" class="rounded-xl p-3 border text-xs space-y-1.5">
-          <p :class="testResult.success ? 'text-emerald-700' : 'text-red-700'" class="font-medium">
+        <div v-if="testResult" :class="testResult.success ? 'bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700' : 'bg-red-50 border-red-200'" class="rounded-xl p-3 border text-xs space-y-1.5">
+          <p :class="testResult.success ? 'text-foreground' : 'text-red-700'" class="font-medium">
             {{ testResult.success ? t('settings.testSuccess') : t('settings.testFailed') }}
           </p>
           <p v-if="testResult.success" class="text-muted-foreground">
@@ -118,7 +118,7 @@
           :disabled="testLoading || !testModel"
           @click="handleTest"
           class="w-full py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
-          :class="testResult?.success ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-muted text-muted-foreground hover:bg-muted/80'"
+          :class="testResult?.success ? 'bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hover:opacity-90' : 'bg-muted text-muted-foreground hover:bg-muted/80'"
         >
           {{ testLoading ? '...' : t('settings.test') }}
         </button>

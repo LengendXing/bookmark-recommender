@@ -9,7 +9,7 @@
           <div class="flex gap-1.5">
             <select
               v-model="searchMode"
-              class="px-2.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 flex-shrink-0"
+              class="px-2.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30 flex-shrink-0"
               style="background-color: hsl(var(--muted) / 0.6)"
             >
               <option value="normal">{{ t('bookmarks.searchNormal') }}</option>
@@ -17,12 +17,12 @@
             </select>
             <div class="relative flex-1">
               <Search v-if="searchMode === 'normal'" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-              <Sparkles v-else class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent/60" />
+              <Sparkles v-else class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
               <input
                 v-model="searchQuery"
                 :placeholder="searchMode === 'normal' ? t('bookmarks.search') : t('bookmarks.semanticPlaceholder')"
                 @keyup.enter="searchMode === 'semantic' && handleSemanticSearch()"
-                class="w-full pl-9 pr-3 py-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/30"
+                class="w-full pl-9 pr-3 py-2 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-zinc-400/30"
                 style="background-color: hsl(var(--muted) / 0.6)"
               />
             </div>
@@ -32,7 +32,7 @@
           v-if="searchMode === 'semantic'"
           @click="handleSemanticSearch"
           :disabled="semanticLoading"
-          class="flex items-center gap-1.5 px-4 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+          class="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
         >
           <Search class="w-4 h-4" />
           {{ semanticLoading ? '...' : t('bookmarks.search') }}
@@ -87,7 +87,7 @@
           <div class="flex-1 h-2 rounded-full overflow-hidden" style="background-color: hsl(var(--muted))">
             <div
               class="h-full transition-all duration-300 rounded-full"
-              style="background-color: hsl(var(--accent))"
+              style="background-color: hsl(var(--foreground))"
               :style="{ width: analyzePercent + '%' }"
             ></div>
           </div>
@@ -130,33 +130,33 @@
           <form @submit.prevent="handleAdd" class="space-y-4">
             <div>
               <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.url') }}</label>
-              <input v-model="addForm.url" type="url" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+              <input v-model="addForm.url" type="url" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30" style="background-color: hsl(var(--muted) / 0.6)" />
             </div>
             <div>
               <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.title') }}</label>
-              <input v-model="addForm.title" type="text" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+              <input v-model="addForm.title" type="text" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30" style="background-color: hsl(var(--muted) / 0.6)" />
             </div>
             <div>
               <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.description') }}</label>
-              <input v-model="addForm.description" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+              <input v-model="addForm.description" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30" style="background-color: hsl(var(--muted) / 0.6)" />
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.author') }}</label>
-                <input v-model="addForm.author" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+                <input v-model="addForm.author" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30" style="background-color: hsl(var(--muted) / 0.6)" />
               </div>
               <div>
                 <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.category') }}</label>
-                <input v-model="addForm.category" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+                <input v-model="addForm.category" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30" style="background-color: hsl(var(--muted) / 0.6)" />
               </div>
             </div>
             <div>
               <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.tags') }}</label>
-              <input v-model="addForm.tagsStr" :placeholder="t('bookmarks.tagsHint')" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+              <input v-model="addForm.tagsStr" :placeholder="t('bookmarks.tagsHint')" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30" style="background-color: hsl(var(--muted) / 0.6)" />
             </div>
             <div class="flex gap-3 pt-2">
               <button type="button" @click="showAddModal = false" class="flex-1 py-2 rounded-xl text-sm font-medium border border-border/50 hover:bg-muted transition-colors">{{ t('common.cancel') }}</button>
-              <button type="submit" :disabled="addLoading" class="flex-1 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ addLoading ? '...' : t('common.save') }}</button>
+              <button type="submit" :disabled="addLoading" class="flex-1 py-2 bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900 rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ addLoading ? '...' : t('common.save') }}</button>
             </div>
           </form>
         </div>
@@ -173,7 +173,7 @@
           <div class="space-y-4">
             <div>
               <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.browserSource') }}</label>
-              <select v-model="importBrowser" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)">
+              <select v-model="importBrowser" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30" style="background-color: hsl(var(--muted) / 0.6)">
                 <option value="">-- {{ t('bookmarks.selectBrowser') }} --</option>
                 <option value="chrome">Google Chrome</option>
                 <option value="firefox">Mozilla Firefox</option>
@@ -184,13 +184,13 @@
             </div>
             <div v-if="importBrowser">
               <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.selectFile') }}</label>
-              <input ref="fileInput" type="file" accept=".html,.htm" @change="handleFileSelect" class="block w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:text-xs file:font-medium file:border-0 file:bg-accent/10 file:text-accent hover:file:bg-accent/20 transition-all" />
+              <input ref="fileInput" type="file" accept=".html,.htm" @change="handleFileSelect" class="block w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:text-xs file:font-medium file:border-0 file:bg-zinc-100 dark:file:bg-zinc-800 file:text-zinc-700 dark:file:text-zinc-300 hover:file:bg-zinc-200 dark:hover:file:bg-zinc-700 transition-all" />
             </div>
             <p v-if="importError" class="text-destructive text-xs text-center">{{ importError }}</p>
-            <p v-if="importSuccess" class="text-xs text-center" style="color: hsl(var(--success))">{{ importSuccess }}</p>
+            <p v-if="importSuccess" class="text-xs text-center" style="color: hsl(var(--foreground))">{{ importSuccess }}</p>
             <div class="flex gap-3 pt-2">
               <button type="button" @click="showImportModal = false" class="flex-1 py-2 rounded-xl text-sm font-medium border border-border/50 hover:bg-muted transition-colors">{{ t('common.cancel') }}</button>
-              <button @click="handleImport" :disabled="!selectedFile || importLoading" class="flex-1 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ importLoading ? '...' : t('bookmarks.import') }}</button>
+              <button @click="handleImport" :disabled="!selectedFile || importLoading" class="flex-1 py-2 bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900 rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ importLoading ? '...' : t('bookmarks.import') }}</button>
             </div>
           </div>
         </div>
@@ -207,33 +207,33 @@
           <form @submit.prevent="handleEditSave" class="space-y-4">
             <div>
               <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.url') }}</label>
-              <input v-model="editForm.url" type="url" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+              <input v-model="editForm.url" type="url" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30" style="background-color: hsl(var(--muted) / 0.6)" />
             </div>
             <div>
               <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.titleLabel') }}</label>
-              <input v-model="editForm.title" type="text" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+              <input v-model="editForm.title" type="text" required class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30" style="background-color: hsl(var(--muted) / 0.6)" />
             </div>
             <div>
               <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.description') }}</label>
-              <input v-model="editForm.description" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+              <input v-model="editForm.description" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30" style="background-color: hsl(var(--muted) / 0.6)" />
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.author') }}</label>
-                <input v-model="editForm.author" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+                <input v-model="editForm.author" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30" style="background-color: hsl(var(--muted) / 0.6)" />
               </div>
               <div>
                 <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.category') }}</label>
-                <input v-model="editForm.category" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+                <input v-model="editForm.category" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30" style="background-color: hsl(var(--muted) / 0.6)" />
               </div>
             </div>
             <div>
               <label class="text-xs font-medium text-muted-foreground mb-1 block">{{ t('bookmarks.tags') }}</label>
-              <input v-model="editForm.tagsStr" :placeholder="t('bookmarks.tagsHint')" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" style="background-color: hsl(var(--muted) / 0.6)" />
+              <input v-model="editForm.tagsStr" :placeholder="t('bookmarks.tagsHint')" type="text" class="w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/30" style="background-color: hsl(var(--muted) / 0.6)" />
             </div>
             <div class="flex gap-3 pt-2">
               <button type="button" @click="showEditModal = false" class="flex-1 py-2 rounded-xl text-sm font-medium border border-border/50 hover:bg-muted transition-colors">{{ t('common.cancel') }}</button>
-              <button type="submit" :disabled="editLoading" class="flex-1 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ editLoading ? '...' : t('common.save') }}</button>
+              <button type="submit" :disabled="editLoading" class="flex-1 py-2 bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900 rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all">{{ editLoading ? '...' : t('common.save') }}</button>
             </div>
           </form>
         </div>
@@ -245,7 +245,7 @@
       </div>
 
       <!-- Analyze Result -->
-      <div v-if="analyzeMsg" class="mb-4 px-4 py-3 rounded-xl text-sm font-medium" :style="analyzeMsg.includes('failed') ? 'background-color: hsl(var(--destructive) / 0.08); color: hsl(var(--destructive))' : 'background-color: hsl(var(--success) / 0.08); color: hsl(var(--success))'">
+      <div v-if="analyzeMsg" class="mb-4 px-4 py-3 rounded-xl text-sm font-medium" :style="analyzeMsg.includes('failed') ? 'background-color: hsl(var(--destructive) / 0.08); color: hsl(var(--destructive))' : 'background-color: hsl(var(--foreground) / 0.06); color: hsl(var(--foreground))'">
         {{ analyzeMsg }}
       </div>
 
@@ -260,7 +260,7 @@
           <thead>
             <tr style="background-color: hsl(var(--muted) / 0.4)">
               <th class="px-3 py-3 text-center" style="width: 3em">
-                <input type="checkbox" :checked="allSelectedOnPage" @change="toggleSelectAll" class="w-3.5 h-3.5 rounded accent-[hsl(var(--accent))] cursor-pointer" />
+                <input type="checkbox" :checked="allSelectedOnPage" @change="toggleSelectAll" class="w-3.5 h-3.5 rounded accent-zinc-800 cursor-pointer" />
               </th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase" style="width: 4em">#</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground tracking-wide uppercase" style="max-width: 8em">Title</th>
@@ -274,21 +274,21 @@
           <tbody>
             <tr v-for="bm in displayItems" :key="bm.id" class="border-t border-border/50 hover:bg-muted/30 transition-colors">
               <td class="px-3 py-3 text-center">
-                <input type="checkbox" :checked="selectedIds.has(bm.id)" @change="toggleSelect(bm.id)" class="w-3.5 h-3.5 rounded accent-[hsl(var(--accent))] cursor-pointer" />
+                <input type="checkbox" :checked="selectedIds.has(bm.id)" @change="toggleSelect(bm.id)" class="w-3.5 h-3.5 rounded accent-zinc-800 cursor-pointer" />
               </td>
               <td class="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">{{ bm.id }}</td>
               <td class="px-4 py-3">
-                <button @click="openDrawer(bm.id)" class="font-medium hover:text-accent transition-colors text-left block whitespace-nowrap" :title="bm.title">{{ truncateTitle(bm.title) }}</button>
+                <button @click="openDrawer(bm.id)" class="font-medium hover:text-foreground transition-colors text-left block whitespace-nowrap" :title="bm.title">{{ truncateTitle(bm.title) }}</button>
                 <p class="text-xs text-muted-foreground whitespace-nowrap mt-0.5" :title="bm.description" v-if="bm.description">{{ truncateTitle(bm.description) }}</p>
               </td>
               <td class="px-4 py-3 hidden md:table-cell text-muted-foreground text-xs">{{ bm.category || '-' }}</td>
               <td class="px-4 py-3 hidden md:table-cell">
                 <div class="flex flex-wrap gap-1 max-w-[160px]">
-                  <span v-for="tag in (bm.tags || [])" :key="tag" class="inline-block px-2 py-0.5 rounded-lg text-xs font-medium truncate max-w-[120px]" style="background-color: hsl(var(--accent) / 0.08); color: hsl(var(--accent))">{{ tag }}</span>
+                  <span v-for="tag in (bm.tags || [])" :key="tag" class="inline-block px-2 py-0.5 rounded-lg text-xs font-medium truncate max-w-[120px]" style="background-color: hsl(var(--foreground) / 0.06); color: hsl(var(--foreground))">{{ tag }}</span>
                 </div>
               </td>
               <td v-if="semanticMode" class="px-4 py-3 hidden sm:table-cell">
-                <span class="inline-block px-2 py-0.5 rounded-lg text-xs font-medium" :style="{ backgroundColor: `hsl(var(--accent) / ${(bm.score || 0) * 0.12})`, color: 'hsl(var(--accent))' }">{{ ((bm.score || 0) * 100).toFixed(0) }}%</span>
+                <span class="inline-block px-2 py-0.5 rounded-lg text-xs font-medium" :style="{ backgroundColor: `hsl(var(--foreground) / ${(bm.score || 0) * 0.08})`, color: 'hsl(var(--foreground))' }">{{ ((bm.score || 0) * 100).toFixed(0) }}%</span>
               </td>
               <td v-else class="px-4 py-3 hidden sm:table-cell font-medium">{{ bm.rating }}</td>
               <td class="px-4 py-3 text-center relative">
@@ -341,7 +341,7 @@
           <label class="text-xs text-muted-foreground">{{ t('pagination.perPage') }}</label>
           <select
             v-model="pageSize"
-            class="px-2 py-1 rounded-lg text-xs font-medium border border-border/50 focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all"
+            class="px-2 py-1 rounded-lg text-xs font-medium border border-border/50 focus:outline-none focus:ring-2 focus:ring-zinc-400/30 transition-all"
             style="background-color: hsl(var(--muted) / 0.4)"
           >
             <option v-for="n in [10, 20, 50, 100]" :key="n" :value="n">{{ n }}</option>
@@ -358,7 +358,7 @@
               :min="1"
               :max="totalPages"
               :placeholder="t('pagination.jumpTo')"
-              class="w-14 px-2 py-1 rounded-lg text-xs text-center font-medium border border-border/50 focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all"
+              class="w-14 px-2 py-1 rounded-lg text-xs text-center font-medium border border-border/50 focus:outline-none focus:ring-2 focus:ring-zinc-400/30 transition-all"
               style="background-color: hsl(var(--muted) / 0.4)"
               @keyup.enter="goToPage"
             />

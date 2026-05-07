@@ -4,7 +4,7 @@
       <h2 class="text-xl font-semibold tracking-tight">{{ t('model.title') }}</h2>
       <button
         @click="showVerify = true"
-        class="flex items-center gap-1.5 px-4 py-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+        class="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900 rounded-xl text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
       >
         <Zap class="w-4 h-4" />
         {{ t('model.train') }}
@@ -20,7 +20,7 @@
           v-model="verifyCode"
           type="text"
           placeholder="Enter verification code"
-          class="w-full px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/30 mb-4"
+          class="w-full px-3.5 py-2.5 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-zinc-400/30 mb-4"
           style="background-color: hsl(var(--muted) / 0.6)"
           @keyup.enter="confirmTrain"
         />
@@ -33,7 +33,7 @@
           <button
             @click="confirmTrain"
             :disabled="!verifyCode"
-            class="px-4 py-2 rounded-xl text-sm font-medium bg-accent text-accent-foreground hover:opacity-90 transition-all disabled:opacity-50"
+            class="px-4 py-2 rounded-xl text-sm font-medium bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hover:opacity-90 transition-all disabled:opacity-50"
           >Confirm</button>
         </div>
       </div>
@@ -61,8 +61,8 @@
             <td class="px-4 py-3 font-medium">{{ v.model_name }}</td>
             <td class="px-4 py-3">{{ v.version }}</td>
             <td class="px-4 py-3">
-              <span :class="['inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium', v.status === 'trained' ? 'bg-success/10 text-success' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-400/10 dark:text-yellow-400']">
-                <span :class="['w-1.5 h-1.5 rounded-full', v.status === 'trained' ? 'bg-success' : 'bg-yellow-500']" />
+              <span :class="['inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium', v.status === 'trained' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-400/10 dark:text-yellow-400']">
+                <span :class="['w-1.5 h-1.5 rounded-full', v.status === 'trained' ? 'bg-zinc-500' : 'bg-yellow-500']" />
                 {{ v.status }}
               </span>
             </td>
@@ -80,7 +80,7 @@
     </div>
 
     <!-- Status message -->
-    <div v-if="trainMsg" class="mt-4 px-4 py-3 rounded-xl text-sm font-medium" :class="trainOk ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'">
+    <div v-if="trainMsg" class="mt-4 px-4 py-3 rounded-xl text-sm font-medium" :class="trainOk ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300' : 'bg-destructive/10 text-destructive'">
       {{ trainMsg }}
     </div>
   </div>

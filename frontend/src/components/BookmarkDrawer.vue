@@ -47,7 +47,7 @@
           <!-- URL -->
           <section>
             <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">{{ t('bookmarks.url') }}</h4>
-            <a v-if="bookmark.url" :href="bookmark.url" target="_blank" class="text-sm text-accent break-all hover:underline">{{ bookmark.url }}</a>
+            <a v-if="bookmark.url" :href="bookmark.url" target="_blank" class="text-sm text-blue-600 dark:text-blue-400 break-all hover:underline">{{ bookmark.url }}</a>
             <span v-else class="text-sm text-muted-foreground">—</span>
           </section>
 
@@ -68,7 +68,7 @@
           <!-- Category -->
           <section>
             <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">{{ t('bookmarks.category') }}</h4>
-            <span v-if="bookmark.category" class="inline-block px-2.5 py-1 rounded-lg text-xs font-medium" style="background-color: hsl(var(--accent) / 0.08); color: hsl(var(--accent))">{{ bookmark.category }}</span>
+            <span v-if="bookmark.category" class="inline-block px-2.5 py-1 rounded-lg text-xs font-medium" style="background-color: hsl(var(--foreground) / 0.06); color: hsl(var(--foreground))">{{ bookmark.category }}</span>
             <span v-else class="text-sm text-muted-foreground">—</span>
           </section>
 
@@ -76,7 +76,7 @@
           <section>
             <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">{{ t('bookmarks.tags') }}</h4>
             <div v-if="bookmark.tags && bookmark.tags.length" class="flex flex-wrap gap-1.5">
-              <span v-for="tag in bookmark.tags" :key="tag" class="inline-block px-2.5 py-1 rounded-lg text-xs font-medium" style="background-color: hsl(var(--accent) / 0.08); color: hsl(var(--accent))">{{ tag }}</span>
+              <span v-for="tag in bookmark.tags" :key="tag" class="inline-block px-2.5 py-1 rounded-lg text-xs font-medium" style="background-color: hsl(var(--foreground) / 0.06); color: hsl(var(--foreground))">{{ tag }}</span>
             </div>
             <span v-else class="text-sm text-muted-foreground">—</span>
           </section>
