@@ -268,7 +268,7 @@ app.include_router(api_stats.router, prefix="/api/admin", tags=["api-stats"])
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "version": "0.3.4"}
+    return {"status": "ok", "version": "0.3.5"}
 
 
 # --- Static frontend serving (production) ---
@@ -287,4 +287,4 @@ if _is_prod:
         index_path = os.path.join(_static_dir, "index.html")
         if os.path.isfile(index_path):
             return FileResponse(index_path)
-        return {"status": "ok", "version": "0.3.4"}
+        return {"status": "ok", "version": "0.3.5"}

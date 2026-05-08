@@ -1,5 +1,26 @@
 # Bookmark Recommender 维护日志
 
+## v0.3.5 - 2026-05-08
+### 变更内容
+- 一键分析/生成推荐按钮改造为内联进度条：点击后按钮拉长变为进度条，实时展示进度/状态
+- 一键分析进度条显示百分比（分析中 X%），完成后展示「已完成」
+- 生成推荐进度条显示流程状态（已启动 → 分析标签中 → 搜索项目中 → 生成推荐中 → 已完成）
+- 鼠标悬浮进度条弹出 Teleport 浮窗，展示详细进度信息（当前步骤/进度条/消息）
+- 后端推荐状态细化：_run_recommendation 新增 extracting_tags / searching / generating 状态
+- 前端推荐进度轮询改为本地状态（recProgress），独立于分析进度（progress）
+- 移除旧的推荐进度弹窗（Modal），统一为内联进度条 + 悬浮工具提示
+- i18n 新增 6 keys：recommendFailed / recommendStatusStarting / Extracting / Searching / Generating / Done
+
+### 影响范围
+- 后端：app/api/github.py（_run_recommendation 状态细化）
+- 前端：GitHubProjects.vue（推荐按钮改造 + 分析按钮已在上次完成），i18n/en.json + zh.json（新增 6 keys）
+
+### 功能列表
+- 一键分析按钮 → 内联进度条（百分比展示 + 悬浮工具提示）
+- 生成推荐按钮 → 内联进度条（流程状态展示 + 悬浮工具提示）
+- 进度条拉长至 w-56，填满/未填满颜色对比清晰
+- 悬浮浮窗跟随鼠标位置（左/右智能适配，不超出屏幕）
+
 ## v0.3.4 - 2026-05-08
 ### 变更内容
 - 信任设备功能：MFA 登录时可选择信任设备（"信任此设备，下次跳过两步验证"），跳过后续 MFA

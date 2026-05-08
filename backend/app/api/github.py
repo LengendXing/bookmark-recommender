@@ -477,6 +477,8 @@ def _run_recommendation(user_id: int, top_k_tags: int):
             return
 
         # Count tag frequency
+        task["status"] = "extracting_tags"
+        task["message"] = "Extracting tag profile from analyzed repos..."
         import re
         tag_freq: dict[str, int] = {}
         for repo in analyzed:
@@ -500,7 +502,7 @@ def _run_recommendation(user_id: int, top_k_tags: int):
         sorted_tags = sorted(tag_freq.items(), key=lambda x: x[1], reverse=True)
         top_tags = sorted_tags[:top_k_tags]
 
-        task["status"] = "running"
+        task["status"] = "searching"
         task["total"] = len(top_tags)
         task["current"] = 0
         task["message"] = f"Top tags: {', '.join(t[0] for t in top_tags)}"
@@ -597,6 +599,8 @@ def _run_recommendation(user_id: int, top_k_tags: int):
             task["message"] = f"Tag '{tag}': found {len(search_results)} results, {new_count} new"
 
         total_found = len(task["found_repos"])
+        task["status"] = "generating"
+        task["message"] = f"Generating recommendations... {total_found} repos found"
         task["status"] = "completed"
         task["message"] = f"Recommendation complete: {total_found} new repos from {len(top_tags)} tags"
         task["finished_at"] = datetime.now(timezone.utc).isoformat()

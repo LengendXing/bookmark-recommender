@@ -65,16 +65,101 @@
         <div class="flex-1" />
         <!-- AI buttons (shown only on Starred tab) -->
         <template v-if="activeTab === 'starred'">
-          <button
-            @click="doRecommend"
-            :disabled="recommendRunning"
-            class="h-8 px-3 mr-2 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted transition-colors disabled:opacity-50"
-          >{{ recommendRunning ? '...' : $t('github.recommend') }}</button>
-          <button
-            @click="doAnalyze"
-            :disabled="analyzeRunning"
-            class="h-8 px-3 mr-3 text-xs font-medium rounded-lg bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hover:opacity-90 transition-opacity disabled:opacity-50"
-          >{{ analyzeRunning ? '...' : $t('github.analyze') }}</button>
+          <!-- Recommend button / inline progress bar -->
+          <div class="relative mr-2">
+            <button
+              v-if="!recommendRunning"
+              @click="doRecommend"
+              class="h-8 px-6 text-xs font-medium rounded-lg border border-input bg-card hover:bg-muted transition-colors"
+            >{{ $t('github.recommend') }}</button>
+
+            <div
+              v-else
+              @mouseenter="showRecTooltip = true"
+              @mousemove="updateRecTooltipPosition"
+              @mouseleave="showRecTooltip = false"
+              class="h-8 w-56 rounded-lg bg-muted cursor-default relative overflow-hidden flex items-center justify-center"
+            >
+              <div
+                class="absolute inset-0 h-full rounded-lg transition-all duration-700 ease-out"
+                :class="recProgress.failed ? 'bg-destructive/60' : recProgress.done ? 'bg-green-600 dark:bg-green-500' : 'bg-zinc-800 dark:bg-zinc-200'"
+                :style="{ width: recProgress.done || recProgress.failed ? '100%' : recProgress.pct + '%' }"
+              />
+              <span
+                class="relative z-10 text-xs font-medium"
+                :class="(recProgress.pct > 50 || recProgress.failed) ? 'text-zinc-50 dark:text-zinc-900' : 'text-foreground'"
+              >{{ recStatusText }}</span>
+            </div>
+
+            <!-- Hover tooltip -->
+            <Teleport to="body">
+              <div
+                v-if="recommendRunning && showRecTooltip"
+                class="fixed z-[60] w-64 bg-card border border-border rounded-xl shadow-xl p-4"
+                :style="recTooltipStyle"
+              >
+                <p class="text-sm font-medium mb-2">{{ $t('github.recommending') }}</p>
+                <div class="w-full bg-muted rounded-full h-1.5 mb-2 overflow-hidden">
+                  <div
+                    class="h-full rounded-full transition-all duration-700 ease-out"
+                    :class="recProgress.failed ? 'bg-destructive/60' : recProgress.done ? 'bg-green-600 dark:bg-green-500' : 'bg-zinc-800 dark:bg-zinc-200'"
+                    :style="{ width: recProgress.done || recProgress.failed ? '100%' : recProgress.pct + '%' }"
+                  />
+                </div>
+                <p class="text-xs text-muted-foreground mb-1" v-if="recProgress.message">{{ recProgress.message }}</p>
+                <p v-if="recProgress.failed" class="text-xs text-destructive mt-1 font-medium">{{ $t('github.recommendFailed') }}</p>
+                <p v-if="recProgress.done" class="text-xs text-green-600 dark:text-green-400 mt-1 font-medium">{{ $t('github.recommendComplete', { count: recProgress.found_repos?.length || 0 }) }}</p>
+              </div>
+            </Teleport>
+          </div>
+
+          <!-- Analyze button / inline progress bar -->
+          <div class="relative mr-3">
+            <button
+              v-if="!analyzeRunning"
+              @click="doAnalyze"
+              class="h-8 px-6 text-xs font-medium rounded-lg bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hover:opacity-90 transition-opacity"
+            >{{ $t('github.analyze') }}</button>
+
+            <div
+              v-else
+              @mouseenter="showAnalyzeTooltip = true"
+              @mousemove="updateAnalyzeTooltipPosition"
+              @mouseleave="showAnalyzeTooltip = false"
+              class="h-8 w-56 rounded-lg bg-muted cursor-default relative overflow-hidden flex items-center justify-center"
+            >
+              <div
+                class="absolute inset-0 h-full rounded-lg transition-all duration-500 ease-out"
+                :class="progress.done ? 'bg-green-600 dark:bg-green-500' : 'bg-zinc-800 dark:bg-zinc-200'"
+                :style="{ width: progress.pct + '%' }"
+              />
+              <span
+                class="relative z-10 text-xs font-medium"
+                :class="progress.pct > 50 ? 'text-zinc-50 dark:text-zinc-900' : 'text-foreground'"
+              >{{ progress.done ? $t('github.analyzeCompleteShort') : progress.pct + '%' }}</span>
+            </div>
+
+            <!-- Hover tooltip -->
+            <Teleport to="body">
+              <div
+                v-if="analyzeRunning && showAnalyzeTooltip"
+                class="fixed z-[60] w-64 bg-card border border-border rounded-xl shadow-xl p-4"
+                :style="analyzeTooltipStyle"
+              >
+                <p class="text-sm font-medium mb-2">{{ progress.title }}</p>
+                <div class="w-full bg-muted rounded-full h-1.5 mb-2 overflow-hidden">
+                  <div
+                    class="h-full rounded-full transition-all duration-500 ease-out"
+                    :class="progress.done ? 'bg-green-600 dark:bg-green-500' : 'bg-zinc-800 dark:bg-zinc-200'"
+                    :style="{ width: progress.pct + '%' }"
+                  />
+                </div>
+                <p class="text-xs text-muted-foreground mb-1">{{ progress.msg }}</p>
+                <p v-if="progress.sub" class="text-xs text-muted-foreground/70">{{ progress.sub }}</p>
+                <p v-if="progress.done" class="text-xs text-green-600 dark:text-green-400 mt-1 font-medium">{{ progress.doneMsg }}</p>
+              </div>
+            </Teleport>
+          </div>
         </template>
       </div>
 
@@ -388,35 +473,6 @@
       </div>
     </Teleport>
 
-    <!-- Progress modal -->
-    <Teleport to="body">
-      <div
-        v-if="progress.show"
-        class="fixed inset-0 z-50 flex items-center justify-center"
-      >
-        <div class="fixed inset-0 bg-black/50" />
-        <div class="relative z-10 bg-card rounded-xl border border-border shadow-2xl w-[400px] max-w-[90vw] p-6">
-          <h3 class="font-semibold text-sm mb-4">{{ progress.title }}</h3>
-          <!-- Progress bar -->
-          <div class="w-full bg-muted rounded-full h-2 mb-3 overflow-hidden">
-            <div
-              class="h-full rounded-full transition-all duration-300"
-              :class="progress.done ? 'bg-zinc-700 dark:bg-zinc-300' : 'bg-foreground'"
-              :style="{ width: progress.pct + '%' }"
-            />
-          </div>
-          <p class="text-sm text-muted-foreground mb-1">{{ progress.msg }}</p>
-          <p v-if="progress.sub" class="text-xs text-muted-foreground/70 mb-3">{{ progress.sub }}</p>
-          <div v-if="progress.done" class="text-xs text-green-600 mb-3">{{ progress.doneMsg }}</div>
-          <button
-            v-if="progress.done"
-            @click="progress.show = false"
-            class="w-full h-9 text-sm font-medium rounded-lg bg-zinc-800 dark:bg-zinc-200 text-zinc-50 dark:text-zinc-900 hover:opacity-90"
-          >{{ $t('common.cancel') }}</button>
-        </div>
-      </div>
-    </Teleport>
-
     <!-- Repo Detail Drawer -->
     <RepoDetailDrawer
       :open="drawerOpen"
@@ -618,12 +674,25 @@ const syncAccount = async () => {
 
 // ── AI Analyze ───────────────────────────────────────────────────────────────────
 const analyzeRunning = ref(false)
+const showAnalyzeTooltip = ref(false)
+const analyzeTooltipStyle = ref<Record<string, string>>({})
+
 let analyzeTimer: ReturnType<typeof setInterval> | null = null
+
+function updateAnalyzeTooltipPosition(event: MouseEvent) {
+  const x = event.clientX
+  const y = event.clientY
+  analyzeTooltipStyle.value = {
+    left: `${Math.min(x - 128, window.innerWidth - 280)}px`,
+    top: `${y - 16}px`,
+    transform: 'translateY(-100%)',
+  }
+}
 
 const doAnalyze = async () => {
   if (analyzeRunning.value) return
   analyzeRunning.value = true
-  progress.value = { show: true, title: t('github.analyzing'), msg: 'Starting...', sub: '', pct: 0, done: false, doneMsg: '' }
+  progress.value = { show: false, title: t('github.analyzing'), msg: 'Starting...', sub: '', pct: 0, done: false, doneMsg: '' }
   try {
     await github.analyzeAll()
     analyzeTimer = setInterval(pollAnalyzeProgress, 1500)
@@ -641,7 +710,7 @@ const pollAnalyzeProgress = async () => {
     const d = res.data
     const pct = d.total > 0 ? Math.round((d.current / d.total) * 100) : 0
     progress.value = {
-      show: true,
+      show: false,
       title: t('github.analyzing'),
       msg: `${t('github.analyzeProgress', { current: d.current, total: d.total })}`,
       sub: d.message || '',
@@ -663,12 +732,36 @@ const pollAnalyzeProgress = async () => {
 
 // ── AI Recommend ─────────────────────────────────────────────────────────────────
 const recommendRunning = ref(false)
+const showRecTooltip = ref(false)
+const recTooltipStyle = ref<Record<string, string>>({})
+const recProgress = ref({ status: '', pct: 0, done: false, failed: false, message: '', found_repos: [] as any[] })
+
+const recStatusText = computed(() => {
+  const s = recProgress.value.status
+  if (recProgress.value.failed) return t('github.recommendFailed')
+  if (recProgress.value.done) return t('github.recommendStatusDone')
+  if (s === 'extracting_tags') return t('github.recommendStatusExtracting')
+  if (s === 'searching') return t('github.recommendStatusSearching')
+  if (s === 'generating') return t('github.recommendStatusGenerating')
+  return t('github.recommendStatusStarting')
+})
+
+function updateRecTooltipPosition(event: MouseEvent) {
+  const x = event.clientX
+  const y = event.clientY
+  recTooltipStyle.value = {
+    left: `${Math.min(x - 128, window.innerWidth - 280)}px`,
+    top: `${y - 16}px`,
+    transform: 'translateY(-100%)',
+  }
+}
+
 let recommendTimer: ReturnType<typeof setInterval> | null = null
 
 const doRecommend = async () => {
   if (recommendRunning.value) return
   recommendRunning.value = true
-  progress.value = { show: true, title: t('github.recommending'), msg: 'Starting...', sub: '', pct: 0, done: false, doneMsg: '' }
+  recProgress.value = { status: 'starting', pct: 5, done: false, failed: false, message: 'Starting...', found_repos: [] }
   try {
     await github.generateRecommendations({ top_k_tags: 3 })
     recommendTimer = setInterval(pollRecommendProgress, 1500)
@@ -676,7 +769,7 @@ const doRecommend = async () => {
     const detail = e?.response?.data?.detail
     notify.value = { type: 'error', msg: typeof detail === 'string' ? detail : 'Recommendation failed' }
     recommendRunning.value = false
-    progress.value.show = false
+    recProgress.value = { status: 'failed', pct: 0, done: false, failed: true, message: '', found_repos: [] }
   }
 }
 
@@ -684,24 +777,26 @@ const pollRecommendProgress = async () => {
   try {
     const res: any = await github.recommendationsProgress()
     const d = res.data
-    const pct = d.total > 0 ? Math.round((d.current / d.total) * 100) : 0
-    progress.value = {
-      show: true,
-      title: t('github.recommending'),
-      msg: `${t('github.recommendProgress', { current: d.current, total: d.total })}`,
-      sub: d.message || '',
+    const status = d.status
+    const pctMap: Record<string, number> = { starting: 5, extracting_tags: 15, searching: 40, generating: 75, completed: 100 }
+    const pct = pctMap[status] ?? (d.total > 0 ? Math.round((d.current / d.total) * 100) : 0)
+    recProgress.value = {
+      status,
       pct,
-      done: d.status === 'done',
-      doneMsg: d.status === 'done' ? t('github.recommendComplete', { count: d.found_repos?.length || 0 }) : '',
+      done: status === 'completed',
+      failed: false,
+      message: d.message || '',
+      found_repos: d.found_repos || [],
     }
-    if (d.status === 'done') {
+    if (status === 'completed') {
       if (recommendTimer) { clearInterval(recommendTimer); recommendTimer = null }
       recommendRunning.value = false
+      loadRecommendations()
     }
   } catch {
     if (recommendTimer) { clearInterval(recommendTimer); recommendTimer = null }
     recommendRunning.value = false
-    progress.value.show = false
+    recProgress.value = { status: 'failed', pct: 0, done: false, failed: true, message: '', found_repos: [] }
   }
 }
 
