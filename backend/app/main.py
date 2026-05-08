@@ -268,7 +268,7 @@ app.include_router(api_stats.router, prefix="/api/admin", tags=["api-stats"])
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "version": "0.3.2"}
+    return {"status": "ok", "version": "0.3.4"}
 
 
 # --- Static frontend serving (production) ---
@@ -279,7 +279,12 @@ if _is_prod:
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
+        # If the path points to a real static file, serve it directly
+        file_path = os.path.join(_static_dir, full_path.lstrip("/"))
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        # Otherwise return index.html for SPA client-side routing
         index_path = os.path.join(_static_dir, "index.html")
         if os.path.isfile(index_path):
             return FileResponse(index_path)
-        return {"status": "ok", "version": "0.3.2"}
+        return {"status": "ok", "version": "0.3.4"}

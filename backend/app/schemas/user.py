@@ -30,6 +30,7 @@ class UserOut(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
+    device_token: Optional[str] = None
 
 
 class ProfileUpdate(BaseModel):

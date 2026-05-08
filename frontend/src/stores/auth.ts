@@ -14,6 +14,7 @@ export interface UserInfo {
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('token') || '')
+  const deviceToken = ref(localStorage.getItem('device_token') || '')
   const user = ref<UserInfo | null>(null)
   const mfaToken = ref('')
   const mfaRequired = ref(false)
@@ -32,6 +33,11 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem('token', t)
   }
 
+  function setDeviceToken(t: string) {
+    deviceToken.value = t
+    localStorage.setItem('device_token', t)
+  }
+
   function setUser(u: UserInfo) {
     user.value = u
   }
@@ -48,11 +54,13 @@ export const useAuthStore = defineStore('auth', () => {
 
   function logout() {
     token.value = ''
+    deviceToken.value = ''
     user.value = null
     mfaToken.value = ''
     mfaRequired.value = false
     localStorage.removeItem('token')
+    localStorage.removeItem('device_token')
   }
 
-  return { token, user, isLoggedIn, mfaToken, mfaRequired, displayName, avatarText, setToken, setUser, setMfaToken, clearMfa, logout }
+  return { token, deviceToken, user, isLoggedIn, mfaToken, mfaRequired, displayName, avatarText, setToken, setDeviceToken, setUser, setMfaToken, clearMfa, logout }
 })

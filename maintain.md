@@ -1,5 +1,43 @@
 # Bookmark Recommender 维护日志
 
+## v0.3.4 - 2026-05-08
+### 变更内容
+- 信任设备功能：MFA 登录时可选择信任设备（"信任此设备，下次跳过两步验证"），跳过后续 MFA
+- 新增 `br_trusted_devices` 数据表：存储用户信任设备（device_token + device_name + ip_address + user_agent + last_used_at + 软删除）
+- 后端登录流程改造：MFA 用户登录时自动检测 device_token，有效则免 MFA 直接登录并更新 last_used_at
+- 后端 MFA verify 端点改造：支持 trust_device 参数，验证成功后自动创建信任设备记录并返回 device_token
+- 后端 security.py 新增 create_device_token / verify_device_token（1 年有效期 JWT，scope:device）
+- 后端新增 3 个设备管理端点：GET /devices（列表）、DELETE /devices/{id}（删除单个）、DELETE /devices（全部清除）
+- 后端 User-Agent 解析：_parse_device_name() 提取浏览器/操作系统名称作为设备名
+- 前端 auth store：deviceToken 持久化到 localStorage，自动读取并在登录时携带
+- 前端 Login 页面 MFA 步骤新增「信任此设备」复选框
+- 前端 EditProfileModal 2FA tab 新增信任设备列表（设备名/IP/删除/全部清除）
+- i18n 新增 6 keys：trustThisDevice / trustedDevices / noTrustedDevices / clearAllDevices / deviceRemoved / devicesCleared
+- 版本号更新为 0.3.4
+
+### 影响范围
+- 后端：models/trusted_device.py（新增），schemas/trusted_device.py（新增），models/__init__.py（导入 TrustedDevice），core/security.py（device token 函数），api/auth.py（登录 MFA + verify + 3 设备端点），main.py（lifespan 兼容加列 + 版本号）
+- 前端：stores/auth.ts（deviceToken 持久化），pages/Login.vue（信任设备复选框），components/EditProfileModal.vue（信任设备列表），api/index.ts（3 设备 API），i18n/en.json + zh.json（6 keys），package.json（版本号）
+
+### 功能列表
+- MFA 用户登录时使用已信任设备自动跳过 2FA
+- 信任设备记录设备名/IP/User-Agent/最后使用时间
+- 用户可在 2FA 设置中查看/删除信任设备
+- 一次性清除所有信任设备
+- 设备 token 1 年有效期，到期自动失效
+
+## v0.3.3 - 2026-05-08
+### 变更内容
+- 修复生产部署 Logo 破损 bug：SPA catch-all `/{full_path:path}` 无条件返回 index.html，导致浏览器请求 `/logo-light.svg` 等静态文件时收到 HTML 而非 SVG 图片
+- 修复方案：`serve_spa` 先检查请求路径是否匹配 dist 目录中的真实文件，存在则返回文件，否则回退到 SPA index.html
+
+### 影响范围
+- 后端：app/main.py（serve_spa 函数逻辑修复）
+
+### 功能列表
+- 登录页 / 管理员界面 Logo 正常显示（light/dark 主题切换正常）
+- SPA 客户端路由回退不受影响
+
 ## v0.3.2 - 2026-05-07
 ### 变更内容
 - 修复 EditProfileModal 2FA 状态持久化 bug：`mfaEnabled` 从 `ref` 改为 `computed`（关闭弹窗重开后正确显示已启用/未启用状态）

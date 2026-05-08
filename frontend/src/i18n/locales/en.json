@@ -209,7 +209,13 @@
     "profileSaved": "Profile updated",
     "mfaEnabledSuccess": "2FA enabled successfully",
     "mfaDisabledSuccess": "2FA disabled successfully",
-    "passwordMismatch": "Passwords do not match"
+    "passwordMismatch": "Passwords do not match",
+    "trustThisDevice": "Trust this device (skip 2FA next time)",
+    "trustedDevices": "Trusted Devices",
+    "noTrustedDevices": "No trusted devices",
+    "clearAllDevices": "Clear All",
+    "deviceRemoved": "Device removed",
+    "devicesCleared": "All devices cleared"
   },
   "github": {
     "title": "Open Source Projects",

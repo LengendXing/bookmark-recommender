@@ -236,6 +236,48 @@
               {{ t('common.cancel') }}
             </button>
           </div>
+
+          <!-- Trusted devices -->
+          <div class="border-t border-border/30 pt-3 mt-3">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-xs font-medium text-muted-foreground">{{ t('user.trustedDevices') }}</p>
+              <button
+                v-if="devices.length > 0"
+                @click="clearAllDevices"
+                class="text-xs text-destructive hover:underline"
+              >
+                {{ t('user.clearAllDevices') }}
+              </button>
+            </div>
+            <div v-if="devicesLoading" class="text-center py-2">
+              <p class="text-xs text-muted-foreground">...</p>
+            </div>
+            <div v-else-if="devices.length === 0" class="text-center py-2">
+              <p class="text-xs text-muted-foreground">{{ t('user.noTrustedDevices') }}</p>
+            </div>
+            <div v-else class="space-y-1.5">
+              <div
+                v-for="device in devices"
+                :key="device.id"
+                class="flex items-center justify-between px-2.5 py-2 rounded-lg"
+                style="background-color: hsl(var(--muted) / 0.3)"
+              >
+                <div class="flex items-center gap-2 min-w-0">
+                  <Laptop class="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  <div class="min-w-0">
+                    <p class="text-xs font-medium truncate">{{ device.device_name }}</p>
+                    <p class="text-xs text-muted-foreground truncate">{{ device.ip_address }}</p>
+                  </div>
+                </div>
+                <button
+                  @click="removeDevice(device.id)"
+                  class="p-1 rounded hover:bg-muted transition-colors flex-shrink-0"
+                >
+                  <Trash2 class="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="flex justify-end pt-3">
@@ -256,7 +298,7 @@ import { ref, computed, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { auth } from '@/api'
-import { ShieldCheck, ShieldOff, User, Lock } from 'lucide-vue-next'
+import { ShieldCheck, ShieldOff, User, Lock, Laptop, Trash2 } from 'lucide-vue-next'
 
 defineEmits<{ close: [] }>()
 
@@ -366,6 +408,18 @@ const disablePassword = ref('')
 const disableCode = ref('')
 const qrCanvas = ref<HTMLCanvasElement | null>(null)
 
+// --- Trusted devices ---
+interface Device {
+  id: number
+  device_name: string
+  ip_address: string
+  user_agent: string
+  created_at: string
+  last_used_at: string
+}
+const devices = ref<Device[]>([])
+const devicesLoading = ref(false)
+
 const error = ref('')
 const success = ref('')
 
@@ -441,6 +495,47 @@ async function disableMfa() {
     mfaLoading.value = false
   }
 }
+
+async function fetchDevices() {
+  devicesLoading.value = true
+  try {
+    const res = await auth.devices()
+    devices.value = res.data || []
+  } catch (_) {
+    devices.value = []
+  } finally {
+    devicesLoading.value = false
+  }
+}
+
+async function removeDevice(id: number) {
+  try {
+    await auth.removeDevice(id)
+    devices.value = devices.value.filter(d => d.id !== id)
+    success.value = t('user.deviceRemoved')
+    setTimeout(() => { success.value = '' }, 3000)
+  } catch (e: any) {
+    error.value = parseError(e)
+  }
+}
+
+async function clearAllDevices() {
+  try {
+    await auth.clearDevices()
+    devices.value = []
+    success.value = t('user.devicesCleared')
+    setTimeout(() => { success.value = '' }, 3000)
+  } catch (e: any) {
+    error.value = parseError(e)
+  }
+}
+
+// Watch for 2FA tab activation to fetch devices
+watch(activeTab, (tab) => {
+  if (tab === '2fa' && mfaEnabled.value) {
+    fetchDevices()
+  }
+})
 
 function parseError(e: any): string {
   const d = e.response?.data

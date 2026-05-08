@@ -26,6 +26,11 @@
           />
         </div>
 
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input v-model="trustDevice" type="checkbox" class="w-4 h-4 rounded accent-accent" />
+          <span class="text-xs text-muted-foreground">{{ t('user.trustThisDevice') }}</span>
+        </label>
+
         <p v-if="error" class="text-destructive text-xs text-center font-medium">{{ error }}</p>
 
         <button
@@ -105,12 +110,17 @@ const loading = ref(false)
 // MFA state
 const showMfa = ref(false)
 const mfaCode = ref('')
+const trustDevice = ref(false)
 
 const handleLogin = async () => {
   loading.value = true
   error.value = ''
   try {
-    const res = await auth.login(form.value)
+    const loginData: any = { ...form.value }
+    if (authStore.deviceToken) {
+      loginData.device_token = authStore.deviceToken
+    }
+    const res = await auth.login(loginData)
     if (res.data.requires_mfa) {
       authStore.setMfaToken(res.data.mfa_token)
       showMfa.value = true
@@ -130,9 +140,12 @@ const handleVerify = async () => {
   loading.value = true
   error.value = ''
   try {
-    const res = await auth.verify(authStore.mfaToken, mfaCode.value)
+    const res = await auth.verify(authStore.mfaToken, mfaCode.value, trustDevice.value)
     authStore.setToken(res.data.token)
     authStore.setUser(res.data.user)
+    if (res.data.device_token) {
+      authStore.setDeviceToken(res.data.device_token)
+    }
     authStore.clearMfa()
     router.push('/dashboard')
   } catch (e: any) {

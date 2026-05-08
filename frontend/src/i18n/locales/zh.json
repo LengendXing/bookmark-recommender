@@ -209,7 +209,13 @@
     "profileSaved": "资料已更新",
     "mfaEnabledSuccess": "两步验证已启用",
     "mfaDisabledSuccess": "两步验证已禁用",
-    "passwordMismatch": "两次密码不一致"
+    "passwordMismatch": "两次密码不一致",
+    "trustThisDevice": "信任此设备（下次跳过两步验证）",
+    "trustedDevices": "信任设备",
+    "noTrustedDevices": "暂无信任设备",
+    "clearAllDevices": "清除全部",
+    "deviceRemoved": "设备已移除",
+    "devicesCleared": "全部设备已清除"
   },
   "github": {
     "title": "开源项目管理",

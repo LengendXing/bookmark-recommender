@@ -47,3 +47,14 @@ def verify_mfa_token(token: str) -> Optional[int]:
     if payload is None or payload.get("scope") != "mfa":
         return None
     return int(payload["sub"])
+
+
+def create_device_token(user_id: int) -> str:
+    return create_access_token({"sub": str(user_id), "scope": "device"}, timedelta(days=365))
+
+
+def verify_device_token(token: str) -> Optional[int]:
+    payload = decode_access_token(token)
+    if payload is None or payload.get("scope") != "device":
+        return None
+    return int(payload["sub"])

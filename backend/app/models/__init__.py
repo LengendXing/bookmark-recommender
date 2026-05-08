@@ -11,5 +11,6 @@ from app.models.recommended_repo import RecommendedRepo
 from app.models.api_route import ApiRoute
 from app.models.external_api import ExternalApi
 from app.models.api_call_log import ApiCallLog
+from app.models.trusted_device import TrustedDevice
 
-__all__ = ["Base", "TimestampMixin", "User", "Bookmark", "AuditLog", "ModelVersion", "SystemConfig", "GitHubAccount", "StarredRepo", "RecommendedRepo", "ApiRoute", "ExternalApi", "ApiCallLog"]
+__all__ = ["Base", "TimestampMixin", "User", "Bookmark", "AuditLog", "ModelVersion", "SystemConfig", "GitHubAccount", "StarredRepo", "RecommendedRepo", "ApiRoute", "ExternalApi", "ApiCallLog", "TrustedDevice"]

@@ -2,15 +2,19 @@ import request from './request'
 
 export const auth = {
   register: (data: { username: string; email: string; password: string }) => request.post('/auth/register', data),
-  login: (data: { username: string; password: string }) => request.post('/auth/login', data),
+  login: (data: { username: string; password: string; device_token?: string }) => request.post('/auth/login', data),
   me: () => request.get('/auth/me'),
-  verify: (mfaToken: string, code: string) => request.post('/auth/verify', { mfa_token: mfaToken, code }),
+  verify: (mfaToken: string, code: string, trustDevice?: boolean) =>
+    request.post('/auth/verify', { mfa_token: mfaToken, code, trust_device: trustDevice || false }),
   profile: (data: { nickname?: string; avatar_text?: string; current_password: string; new_password?: string }) =>
     request.put('/auth/profile', data),
   mfaSetup: () => request.post('/auth/mfa/setup'),
   mfaConfirm: (code: string) => request.post('/auth/mfa/confirm', { code }),
   mfaDisable: (password: string, code: string) => request.post('/auth/mfa/disable', { password, code }),
   mfaStatus: () => request.get('/auth/mfa/status'),
+  devices: () => request.get('/auth/devices'),
+  removeDevice: (id: number) => request.delete(`/auth/devices/${id}`),
+  clearDevices: () => request.delete('/auth/devices'),
 }
 
 export const bookmarks = {
